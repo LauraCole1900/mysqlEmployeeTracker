@@ -1,0 +1,24 @@
+{
+  "name": "homework10",
+  "version": "1.0.0",
+  "description": "## Table of Contents",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LauraCole1900/mysqlEmployeeTracker.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LauraCole1900/mysqlEmployeeTracker/issues"
+  },
+  "homepage": "https://github.com/LauraCole1900/mysqlEmployeeTracker#readme",
+  "dependencies": {
+    "console.table": "^0.10.0",
+    "inquirer": "^7.3.3"
+  }
+}
