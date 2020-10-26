@@ -1,6 +1,9 @@
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 
+// initialize function
+
+
 // Build a command-line application that at a minimum allows the user to:
 // Add departments, roles, employees
 // View departments, roles, employees
@@ -36,3 +39,5 @@ const cTable = require("console.table");
 // department
 // salary
 // manager
+
+// DROP DATABASE IF EXISTS
