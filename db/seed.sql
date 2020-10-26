@@ -27,3 +27,11 @@ CREATE TABLE employee (
   PRIMARY KEY (id)
 );
 
+-- Add departments, roles, employees: INSERT into appropriate table --
+-- View departments, roles, employees: JOIN --
+-- Update employee roles --
+
+-- Update employee managers: JOIN --
+-- View employees by manager: JOIN --
+-- Delete departments, roles, empoyees --
+-- View total utilized budget of department (total combined salaries) --
