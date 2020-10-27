@@ -112,14 +112,14 @@ function addDepartment() {
 
 function addEmployee() {
   inquirer.prompt(employeeQuestions).then(response => {
-    
+
   })
 };
 
 
 function addRole() {
   inquirer.prompt(roleQuestions).then(response => {
-    const newRole = new Department(response.roleTitle, response.roleSalary, response.roleDept)
+    const newRole = new Role(response.roleTitle, response.roleSalary, response.roleDept)
     roleArray.push(newRole)
   })
 };
