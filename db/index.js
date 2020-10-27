@@ -112,6 +112,7 @@ function addDepartment() {
 
 function addEmployee() {
   inquirer.prompt(employeeQuestions).then(response => {
+    const newEmployee = new Employee(response.firstName, response.lastName, response.jobTitle, response.managerName)
 
   })
 };
