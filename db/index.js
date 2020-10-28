@@ -272,22 +272,73 @@ function viewByManager() {
 
 // Bonus
 function viewDeptBudget() {
-
+  inquirer.prompt(deptQuestion).then(response => {
+    console.log("Calculating budget by department...\n");
+    // department.name
+    // number of roles in department: 
+    connection.query("SELECT * FROM employee", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.log(res);
+    })
+  })
 };
 
 
 
 // "Delete" functions (all bonus)
 function deleteEmployee() {
-
+  inquirer.prompt(employeeQuestions[0], employeeQuestions[1]).then(response => {
+    console.log("Deleting employee...\n");
+    connection.query(
+      "DELETE FROM employee WHERE ?",
+      {
+        first_name: response.firstName,
+        last_name: response.lastName
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employees deleted!\n");
+        // Call readProducts AFTER the DELETE completes
+        // readProducts();
+      }
+    );
+  })
 };
 
 
 function deleteRole() {
-
+  inquirer.prompt(roleQuestions[0]).then(response => {
+    console.log("Deleting role...\n");
+    connection.query(
+      "DELETE FROM role WHERE ?",
+      {
+        title: response.roleTitle,
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " roles deleted!\n");
+        // Call readProducts AFTER the DELETE completes
+        // readProducts();
+      }
+    );
+  })
 };
 
-
 function deleteDepartment() {
-
+  inquirer.prompt(deptQuestion).then(response => {
+    console.log("Deleting department...\n");
+    connection.query(
+      "DELETE FROM department WHERE ?",
+      {
+        name: response.deptName,
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " departments deleted!\n");
+        // Call readProducts AFTER the DELETE completes
+        // readProducts();
+      }
+    );
+  })
 };
