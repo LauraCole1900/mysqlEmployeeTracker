@@ -1,6 +1,8 @@
 // classes & methods here
 
 const inquirer = require("inquirer");
+const cTable = require("console.table");
+const mysql = require("mysql");
 const Department = require("./lib/Department");
 const Employee = require("./lib/Employee");
 const Role = require("./lib/Role");
@@ -105,7 +107,7 @@ const employeeQuestions = [
 function addDepartment() {
   inquirer.prompt(deptQuestion).then(response => {
     const newDepartment = new Department(response.deptName)
-    departmentArray.push(newDepartment)
+    console.log(newDepartment);
   })
 };
 
@@ -113,7 +115,7 @@ function addDepartment() {
 function addEmployee() {
   inquirer.prompt(employeeQuestions).then(response => {
     const newEmployee = new Employee(response.firstName, response.lastName, response.jobTitle, response.managerName)
-
+    console.log(newEmployee);
   })
 };
 
@@ -121,7 +123,7 @@ function addEmployee() {
 function addRole() {
   inquirer.prompt(roleQuestions).then(response => {
     const newRole = new Role(response.roleTitle, response.roleSalary, response.roleDept)
-    roleArray.push(newRole)
+    console.log(newRole);
   })
 };
 

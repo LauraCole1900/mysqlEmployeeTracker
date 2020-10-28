@@ -1,40 +1,36 @@
-DROP DATABASE IF EXISTS datacorp_db;
-
-CREATE DATABASE datacorp_db;
-
 USE datacorp_db;
 
--- create department table --
-CREATE TABLE department (
-  id INT AUTO_INCREMENT,
-  name VARCHAR(30), -- dept name --
-  PRIMARY KEY (id)
-);
+INSERT INTO department (name)
+VALUES ("Sales"), ("Marketing"), ("IT");
 
--- create role table --
-CREATE TABLE role (
-  id INT AUTO_INCREMENT,
-  title VARCHAR(30),
-  salary DECIMAL,
-  department_id INT, -- reference to department role belongs to --
-  PRIMARY KEY (id)
-);
+INSERT INTO role (title, salary, department_id)
+VALUES ("Sales manager", 63072.10, 1),
+("Salesman", 26937.97, 1),
+("Marketing director", 63976.23, 2),
+("Marketer", 30001.01, 2),
+("Senior IT director", 96969.69, 3),
+("IT developer", 69723.01, 3),
+("Junior IT developer", 46347.63, 3);
 
--- create employee table --
-CREATE TABLE employee (
-  id INT AUTO_INCREMENT,
-  first_name VARCHAR(30),
-  last_name VARCHAR(30),
-  role_id INT, -- reference to role employee has --
-  manager_id INT, -- reference to another employee who is manager of the current employee. This field may be null if the employee has no manager --
-  PRIMARY KEY (id)
-);
+INSERT INTO employee (first_name, last_name, role_id)
+VALUES ("Donald", "Threepenny", 1),
+("Sonya", "von Lipwig", 3),
+("Patricia", "Parker", 5);
 
--- Add departments, roles, employees: INSERT into appropriate table --
--- View departments, roles, employees: INNER JOIN  --
--- Update employee roles --
-
--- Update employee managers: JOIN --
--- View employees by manager: JOIN --
--- Delete departments, roles, empoyees --
--- View total utilized budget of department (total combined salaries) INNER JOIN department & role, add all role.salary --
+INSERT INTO employee (first_name, last_name, role_id, manager_id)
+VALUES ("Artie", "Price", 2, 1),
+("Veronica", "Vermeer", 2, 1),
+("Wilson", "Wilson", 2, 1),
+("Frederika", "vanderBeer", 2, 1),
+("Miguel", "Mascaranes", 2, 1),
+("Jasmin", "Khan", 4, 2),
+("Graham", "St. Clair", 4, 2),
+("Rose", "Tyler", 4, 2),
+("Donna", "Noble", 4, 2),
+("Sarah Jane", "Smith", 6, 3),
+("Ryan", "Sinclair", 6, 3),
+("Rory", "Williams", 6, 3),
+("Clara", "Oswald", 7, 3),
+("Michael", "Smith", 7, 3),
+("Jack", "Harkness", 7, 3),
+("Kate", "Lethbridge-Stewart", 7, 3);
