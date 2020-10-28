@@ -50,7 +50,7 @@ const roleArray = [];
 const deptQuestion =
 {
   type: "input",
-  message: "What is the name of this department?",
+  message: "Name of department?",
   name: "deptName"
 };
 
@@ -58,7 +58,7 @@ const deptQuestion =
 const roleQuestions = [
   {
     type: "input",
-    message: "What is this role's title?",
+    message: "Name of role?",
     name: "roleTitle"
   },
   {
@@ -198,30 +198,75 @@ function updateRole() {
 
 // Bonus
 function updateManager() {
-
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Updating manager...\n");
+    var query = connection.query(
+      "UPDATE employee SET ? WHERE ?",
+      [
+        {
+          manager_id: response.ManagerName
+        },
+        {
+          first_name: response.firstName,
+          last_name: response.lastName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employee manager updated!\n");
+        // Call deleteProduct AFTER the UPDATE completes
+        // deleteProduct();
+      })
+  })
 };
 
 
 
 // "View" functions
 function viewAllEmployees() {
-
+  console.log("Selecting all employees...\n");
+  connection.query("SELECT * FROM employees", function (err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.log(res);
+  })
 };
 
 
 function viewByDepartments() {
-
+  inquirer.prompt(deptQuestion).then(response => {
+    console.log("Selecting employees by department...\n");
+    connection.query("SELECT * FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.log(res);
+    })
+  })
 };
 
 
 function viewByRole() {
-
+  inquirer.prompt(roleQuestions[0]).then(response => {
+    console.log("Selecting all employees by role...\n");
+    connection.query("SELECT * FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.log(res);
+    })
+  })
 };
 
 
 // Bonus
 function viewByManager() {
-
+  inquirer.prompt(employeeQuestions[3]).then(response => {
+    console.log("Selecting employees by manager...\n");
+    connection.query("SELECT * FROM employee", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.log(res);
+    })
+  })
 };
 
 
