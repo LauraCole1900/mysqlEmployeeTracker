@@ -3,6 +3,7 @@ const cTable = require("console.table");
 const mysql = require("mysql");
 const config = require("./config.json");
 
+var connection = mysql.createConnection(config);
 
 connection.connect(function(err) {
   if (err) throw err;

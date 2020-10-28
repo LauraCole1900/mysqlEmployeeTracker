@@ -42,9 +42,9 @@ const Role = require("./lib/Role");
 // Role INNER JOIN department on department id for how many roles in that department
 
 
-// const departmentArray = [];
+const departmentArray = [];
 
-// const roleArray = [];
+const roleArray = [];
 
 
 const deptQuestion =
@@ -125,7 +125,6 @@ function addDepartment() {
     );
   })
 };
-
 
 
 function addEmployee() {
@@ -230,7 +229,7 @@ function viewAllEmployees() {
   connection.query("SELECT * FROM employees", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
-    console.log(res);
+    console.table(res);
   })
 };
 
@@ -239,10 +238,10 @@ function viewByDepartments() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Selecting employees by department...\n");
     // do I need a forEach loop here?
-    connection.query("SELECT * FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id AND INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
-      console.log(res);
+      console.table(res);
     })
   })
 };
@@ -251,13 +250,15 @@ function viewByDepartments() {
 function viewByRole() {
   inquirer.prompt(roleQuestions[0]).then(response => {
     console.log("Selecting all employees by role...\n");
-    connection.query("SELECT * FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
-      console.log(res);
+      console.table(res);
     })
   })
 };
+
+viewByRole();
 
 
 // Bonus
@@ -267,7 +268,7 @@ function viewByManager() {
     connection.query("SELECT * FROM employee", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
-      console.log(res);
+      console.table(res);
     })
   })
 };
@@ -284,7 +285,7 @@ function viewDeptBudget() {
     connection.query("SELECT * FROM employee", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
-      console.log(res);
+      console.table(res);
     })
   })
 };
