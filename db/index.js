@@ -7,6 +7,18 @@ const Department = require("./lib/Department");
 const Employee = require("./lib/Employee");
 const Role = require("./lib/Role");
 
+// ======================== delete before pushing ========================
+//connection information
+const config = require("../config.json");
+
+var connection = mysql.createConnection(config);
+
+connection.connect(function(err) {
+  if (err) throw err;
+  console.log("connected as id " + connection.threadId + "\n");
+});
+// =======================================================================
+
 
 // table columns:
 // Department: id, name
@@ -225,13 +237,15 @@ function updateManager() {
 
 // "View" functions
 function viewAllEmployees() {
-  console.log("Selecting all employees...\n");
-  connection.query("SELECT * FROM employees", function (err, res) {
+  console.log("Selecting all employee...\n");
+  connection.query("SELECT * FROM employee", function (err, res) {
     if (err) throw err;
     // Log all results of the SELECT statement
     console.table(res);
   })
 };
+
+viewAllEmployees();
 
 
 function viewByDepartments() {
@@ -258,7 +272,6 @@ function viewByRole() {
   })
 };
 
-viewByRole();
 
 
 // Bonus
