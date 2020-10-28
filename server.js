@@ -7,10 +7,50 @@ const config = require("./config.json");
 connection.connect(function(err) {
   if (err) throw err;
   console.log("connected as id " + connection.threadId + "\n");
-  createProduct();
+  openProcess();
 });
 
-
+function openProcess() {
+  inquirer.prompt(
+    {
+      type: "list",
+      message: "What would you like to do?",
+      name: "action",
+      choices: ["Add Department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department"]
+    }
+  ).then(function (response) {
+    console.log(response)
+    switch (response.action) {
+      case "Add department": addDepartment()
+        break
+      case "Add employee": addEmployee()
+        break
+      case "Add role": addRole()
+        break
+      case "Delete department": deleteDepartment()
+        break
+      case "Delete employee": deleteEmployee()
+        break
+      case "Delete role": deleteRole()
+        break
+      case "Update employee manager": updateManager()
+        break
+      case "Update employee role": updateRole()
+        break
+      case "View all employees": viewAllEmployees()
+        break
+      case "View employees by department": viewByDepartments()
+        break
+      case "View employees by manager": viewByManager()
+        break
+      case "View employees by role": viewByRole()
+        break
+      case "View budget by department": viewDeptBudget()
+        break
+      default: postItem()
+    }
+  })
+}
 
 // initialize function
 

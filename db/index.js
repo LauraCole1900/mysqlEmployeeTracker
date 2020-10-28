@@ -42,9 +42,9 @@ const Role = require("./lib/Role");
 // Role INNER JOIN department on department id for how many roles in that department
 
 
-const departmentArray = [];
+// const departmentArray = [];
 
-const roleArray = [];
+// const roleArray = [];
 
 
 const deptQuestion =
@@ -71,6 +71,7 @@ const roleQuestions = [
     message: "In which department is this role?",
     name: "roleDept",
     choices: departmentArray
+    // can I use connection.query to populate choices?
   },
 ]
 
@@ -91,6 +92,7 @@ const employeeQuestions = [
     message: "What is the employee's job title?",
     name: "jobTitle",
     choices: roleArray
+    // can I use connection.query to populate the choices?
   },
   {
     type: "input",
