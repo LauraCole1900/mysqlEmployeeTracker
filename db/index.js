@@ -108,14 +108,43 @@ function addDepartment() {
   inquirer.prompt(deptQuestion).then(response => {
     const newDepartment = new Department(response.deptName)
     console.log(newDepartment);
+    console.log("Creating a new department...\n");
+    var query = connection.query(
+      "INSERT INTO department SET ?",
+      {
+        name: response.deptName
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " department added!\n");
+        // Call updateProduct AFTER the INSERT completes
+        // updateDepartment();
+      }
+    );
   })
 };
+
 
 
 function addEmployee() {
   inquirer.prompt(employeeQuestions).then(response => {
     const newEmployee = new Employee(response.firstName, response.lastName, response.jobTitle, response.managerName)
     console.log(newEmployee);
+    console.log("Creating a new department...\n");
+    var query = connection.query(
+      "INSERT INTO employee SET ?",
+      {
+        first_name: response.firstName,
+        last_name: response.lastName,
+        role_id: response.jobTitle,
+        manager_id: response.managerName
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employee added!\n");
+        // Call updateProduct AFTER the INSERT completes
+        // updateEmployee();
+      })
   })
 };
 
@@ -124,6 +153,20 @@ function addRole() {
   inquirer.prompt(roleQuestions).then(response => {
     const newRole = new Role(response.roleTitle, response.roleSalary, response.roleDept)
     console.log(newRole);
+    console.log("Creating a new role...\n");
+    var query = connection.query(
+      "INSERT INTO role SET ?",
+      {
+        title: response.roleTitle,
+        salary: response.roleSalary,
+        department_id: role.Dept
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " department added!\n");
+        // Call updateProduct AFTER the INSERT completes
+        // updateRole();
+      })
   })
 };
 
@@ -131,7 +174,26 @@ function addRole() {
 
 // "Update" functions
 function updateRole() {
-
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Updating role...\n");
+    var query = connection.query(
+      "UPDATE employee SET ? WHERE ?",
+      [
+        {
+          role: response.jobTitle
+        },
+        {
+          first_name: response.firstName,
+          last_name: response.lastName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employee role updated!\n");
+        // Call deleteProduct AFTER the UPDATE completes
+        // deleteProduct();
+      })
+  })
 };
 
 // Bonus
