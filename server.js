@@ -47,7 +47,6 @@ function openProcess() {
         break
       case "View budget by department": viewDeptBudget()
         break
-      default: postItem()
     }
   })
 }
