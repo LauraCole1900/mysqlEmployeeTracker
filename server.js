@@ -1,6 +1,7 @@
 const inquirer = require("inquirer");
 const cTable = require("console.table");
 const mysql = require("mysql");
+const app = require("./db/app.js");
 const config = require("./config.json");
 
 var connection = mysql.createConnection(config);
@@ -11,13 +12,13 @@ connection.connect(function(err) {
   openProcess();
 });
 
-function openProcess() {
+function openProcess(app) {
   inquirer.prompt(
     {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add Department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department"]
+      choices: ["Add Department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department", "Done"]
     }
   ).then(function (response) {
     console.log(response)
@@ -48,6 +49,7 @@ function openProcess() {
         break
       case "View budget by department": viewDeptBudget()
         break
+      default: connection.end();
     }
   })
 }
