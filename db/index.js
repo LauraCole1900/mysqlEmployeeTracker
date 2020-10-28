@@ -236,6 +236,7 @@ function viewAllEmployees() {
 function viewByDepartments() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Selecting employees by department...\n");
+    // do I need a forEach loop here?
     connection.query("SELECT * FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
@@ -275,7 +276,9 @@ function viewDeptBudget() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Calculating budget by department...\n");
     // department.name
-    // number of roles in department: 
+    // number of roles in department: INNER JOIN department.id = roles.department_id -> res.affectedRows
+    // number of employees per role: INNER JOIN roles.id = employees.role_id -> forEach res.affectedRows * roles.salary
+    // add resultant products together and return total
     connection.query("SELECT * FROM employee", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
