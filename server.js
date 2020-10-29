@@ -135,6 +135,32 @@ const employeeQuestions = [
 ]
 
 
+const listDepts =
+{
+  type: "list",
+  message: "Which department?",
+  name: "deptListing",
+  choices: deptList()
+};
+
+
+const listManagers =
+{
+  type: "list",
+  message: "Which manager?",
+  name: "managerListing",
+  choices: managerList()
+};
+
+
+const listRoles =
+{
+  type: "list",
+  message: "Which role?",
+  name: "jobList",
+  choices: roleList()
+}
+
 
 // ==========================================================
 
@@ -150,7 +176,7 @@ function addDepartment() {
       },
       function (err, res) {
         if (err) throw err;
-        console.log(res.affectedRows + " department added!\n");
+        console.log("Department added!\n");
         openProcess();
       }
     );
@@ -161,15 +187,17 @@ function addDepartment() {
 
 
 function viewByDepartments() {
-  inquirer.prompt(deptQuestion).then(response => {
+  inquirer.prompt(listDepts).then(response => {
     console.log("Selecting employees by department...\n");
     // do I need a forEach loop here?
-    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id AND INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE department.name = ?", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
       openProcess();
     })
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
 
@@ -188,6 +216,8 @@ function viewDeptBudget() {
       console.table(res);
       openProcess();
     })
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
 
@@ -207,6 +237,8 @@ function deleteDepartment() {
         openProcess();
       }
     );
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
 
@@ -214,15 +246,35 @@ function deleteDepartment() {
 
 // Employee functions
 function addEmployee() {
-  connection.query("INSERT INTO employee SET ?", function (err, res) {
-    inquirer.prompt(employeeQuestions).then(response => {
-
-      if (err) throw err;
-      console.log("Employee added!\n");
-      openProcess();
-    })
+  inquirer.prompt(employeeQuestions).then(response => {
+    connection.query("INSERT INTO employee SET ?",
+      {
+        first_name: response.firstName,
+        last_name: response.lastName,
+        // need to replace response.jobTitle with that role's id
+        // Find row in role with value response.jobTitle
+        // grab the id of that row
+        // input that id into employee.role_id
+        // involves role and employee tables 
+        role_id: response.jobTitle,
+        // need to replace response.managerName with that manager's id
+        // parse name into first_name, last_name
+        // Find row with those values
+        // grab the id of that row
+        // input that id here
+        manager_id: response.managerName
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log("Employee added!\n");
+        openProcess();
+      }
+    );
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
+
 
 // This works
 function viewAllEmployees() {
@@ -239,7 +291,7 @@ function viewAllEmployees() {
 function updateManager() {
   inquirer.prompt(employeeQuestions).then(response => {
     console.log("Updating manager...\n");
-    var query = connection.query(
+    connection.query(
       "UPDATE employee SET ? WHERE ?",
       [
         {
@@ -253,11 +305,11 @@ function updateManager() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " employee manager updated!\n");
-        // Call deleteProduct AFTER the UPDATE completes
-        // deleteProduct();
+        openProcess();
       })
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -269,9 +321,11 @@ function viewByManager() {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
+      openProcess();
     })
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -288,12 +342,12 @@ function deleteEmployee() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " employees deleted!\n");
-        // Call readProducts AFTER the DELETE completes
-        // readProducts();
+        openProcess();
       }
     );
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -303,18 +357,21 @@ function addRole() {
   deptList();
   inquirer.prompt(roleQuestions).then(response => {
     console.log("Creating a new role...\n");
-    var query = connection.query(
+    connection.query(
       "INSERT INTO role SET ?",
       {
         title: response.roleTitle,
         salary: response.roleSalary,
-        department_id: role.Dept
+        // need to replace response.roleId with that role's id
+        department_id: response.roleDept
       },
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " department added!\n");
         openProcess();
       })
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
 
@@ -322,7 +379,7 @@ function addRole() {
 function updateRole() {
   inquirer.prompt(employeeQuestions).then(response => {
     console.log("Updating role...\n");
-    var query = connection.query(
+    connection.query(
       "UPDATE employee SET ? WHERE ?",
       [
         {
@@ -336,11 +393,11 @@ function updateRole() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " employee role updated!\n");
-        // Call deleteProduct AFTER the UPDATE completes
-        // deleteProduct();
+        openProcess();
       })
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -351,9 +408,11 @@ function viewByRole() {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
+      openProcess();
     })
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -369,12 +428,12 @@ function deleteRole() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " roles deleted!\n");
-        // Call readProducts AFTER the DELETE completes
-        // readProducts();
+        openProcess();
       }
     );
+  }).catch(function (err) {
+    if (err) throw err;
   })
-  openProcess();
 };
 
 
