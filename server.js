@@ -59,13 +59,12 @@ function deptList() {
   })
 }
 
-
+// This works
 function managerList() {
   connection.query("SELECT CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", function (err, res) {
     const managerNames = [];
     // loop through the result set and put the values into an array for inquirer
     res.forEach(managerObj => managerNames.push(managerObj.manager_name))
-    console.log(managerNames)
     return managerNames;
   })
 }
