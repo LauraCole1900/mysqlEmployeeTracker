@@ -4,6 +4,8 @@ const app = require("./db/app.js");
 const Employee = require("./db/lib/Employee.js");
 const connection = require("./db/connection.js");
 
+
+// function to open the process
 function openProcess() {
   inquirer.prompt(
     {
@@ -44,7 +46,16 @@ function openProcess() {
       default: process.exit();
     }
   })
-}
+};
+
+
+const roleTitles = connection.query("SELECT role.title FROM role", function (err, res) {
+  if (err) throw err;
+});
+
+const managerNames = connection.query("SELECT employee.first_name, employee.last_name FROM employee WHERE employee.manager_id = NULL", function (err, res) {
+  if (err) throw err;
+});
 
 
 const deptQuestion =
@@ -67,11 +78,10 @@ const roleQuestions = [
     name: "roleSalary"
   },
   {
-    type: "checkbox",
+    type: "list",
     message: "In which department is this role?",
     name: "roleDept",
-    choices: []
-    // can I use connection.query to populate choices?
+    choices: deptNames
   },
 ]
 
@@ -88,22 +98,58 @@ const employeeQuestions = [
     name: "lastName"
   },
   {
-    type: "checkbox",
+    type: "list",
     message: "What is the employee's job title?",
     name: "jobTitle",
-    choices: []
-    // can I use connection.query to populate the choices?
+    choices: function () {
+      var roleNames = [];
+      for (var i = 0; i < response.length; i++) {
+        roleNames.push(response[i].title)
+      }
+      return roleNames;
+    },
   },
   {
-    type: "input",
+    type: "list",
     message: "Who is the employee's manager?",
-    name: "managerName"
+    name: "managerName",
+    choices: managerNames
   },
 ]
 
 
 
 // ==========================================================
+
+// "Populate list" functions
+function deptList() {
+  connection.query("SELECT name FROM department", function(err, res){
+    const deptNames = [];
+    // loop through the result set and put the values into an array for inquirer
+    res.forEach( departmentObj => deptNames.push(departmentObj.name))
+  })
+  return deptNames;
+}
+
+
+function managerList() {
+  connection.query("SELECT name FROM department", function(err, res){
+    const managerNames = [];
+    // loop through the result set and put the values into an array for inquirer
+    res.forEach( managerObj => managerNames.push(managerObj.name))
+    console.log(managerNames);
+  })
+  return managerNames;
+}
+
+managerList();
+
+
+function roleList() {
+
+}
+
+
 
 // Department functions
 function addDepartment() {
@@ -181,21 +227,59 @@ function deleteDepartment() {
 
 
 // Employee functions
-async function addEmployee() {
-  inquirer.prompt(employeeQuestions).then(response => {
-    console.log("Creating a new employee...\n");
-    Employee.addEmployee(newEmployee);
-    let newEmployee = {
-      first_name: response.firstName,
-      last_name: response.lastName,
-      role_id: response.jobTitle,
-      manager_id: response.managerName
-    };
-    console.log("Employee added");
-    openProcess();
+function addEmployee() {
+  inquirer.prompt([
+    {
+      type: "input",
+      message: "What is the employee's first name?",
+      name: "firstName"
+    },
+    {
+      type: "input",
+      message: "What is the employee's last name?",
+      name: "lastName"
+    },
+    {
+      type: "rawlist",
+      message: "What is the employee's job title?",
+      name: "jobTitle",
+      choices: function () {
+        var roleNames = [];
+        for (var i = 0; i < results.length; i++) {
+          roleNames.push(results[i].title)
+        }
+        return roleNames;
+      },
+    },
+    {
+      type: "rawlist",
+      message: "Who is the employee's manager?",
+      name: "managerName",
+      choices: function () {
+        var managerNames = [];
+        for (var i = 0; i < results.length; i++) {
+          managerNames.push(results[i].first_name, results[i].last_name)
+        }
+        return managerNames;
+      },
+    },
+  ]).then(response => {
+    console.log("Adding a new employee...\n");
+    connection.query(
+      "INSERT INTO employee SET ?",
+      {
+        first_name: response.firstName,
+        last_name: response.lastName,
+        role_id: response.jobTitle,
+        manager_id: response.managerName
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log("Employee added!\n");
+        openProcess();
+      })
   })
 };
-
 
 // This works
 function viewAllEmployees() {

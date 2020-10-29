@@ -133,7 +133,7 @@ function addEmployee() {
   inquirer.prompt(employeeQuestions).then(response => {
     const newEmployee = new Employee(response.firstName, response.lastName, response.jobTitle, response.managerName)
     console.log(newEmployee);
-    console.log("Creating a new department...\n");
+    console.log("Adding a new employee...\n");
     var query = connection.query(
       "INSERT INTO employee SET ?",
       {
