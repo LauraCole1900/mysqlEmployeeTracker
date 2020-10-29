@@ -61,12 +61,11 @@ function deptList() {
 
 
 function managerList() {
-  connection.query("SELECT CONCAT (first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id=NULL", function (err, res) {
-    console.log(res);
+  connection.query("SELECT CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", function (err, res) {
     const managerNames = [];
     // loop through the result set and put the values into an array for inquirer
     res.forEach(managerObj => managerNames.push(managerObj.manager_name))
-    // console.log(managerNames)
+    console.log(managerNames)
     return managerNames;
   })
 }
@@ -150,14 +149,12 @@ function addDepartment() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " department added!\n");
-        // Call updateProduct AFTER the INSERT completes
-        // updateDepartment();
+        openProcess();
       }
     );
   }).catch(function (err) {
     if (err) throw err;
   })
-  openProcess();
 };
 
 
@@ -219,6 +216,7 @@ function deleteDepartment() {
 function addEmployee() {
   connection.query("INSERT INTO employee SET ?", function (err, res) {
     inquirer.prompt(employeeQuestions).then(response => {
+
       if (err) throw err;
       console.log("Employee added!\n");
       openProcess();
