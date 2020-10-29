@@ -13,12 +13,12 @@ VALUES ("Sales manager", 63072.10, 1),
 ("Junior IT developer", 46347.63, 3);
 
 INSERT INTO employee (first_name, last_name, role_id)
-VALUES ("Donald", "Threepenny", 1),
-("Sonya", "von Lipwig", 3),
+VALUES ("Ebeneezer", "Scrooge", 1),
+("Moist", "von Lipwig", 3),
 ("Patricia", "Parker", 5);
 
 INSERT INTO employee (first_name, last_name, role_id, manager_id)
-VALUES ("Artie", "Price", 2, 1),
+VALUES ("Bob", "Cratchett", 2, 1),
 ("Veronica", "Vermeer", 2, 1),
 ("Wilson", "Wilson", 2, 1),
 ("Frederika", "vanderBeer", 2, 1),

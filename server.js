@@ -12,7 +12,7 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add Department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department", "Done"]
     }
   ).then(function (response) {
     console.log(response)
@@ -45,6 +45,8 @@ function openProcess() {
         break
       default: process.exit();
     }
+  }).catch(function (err) {
+    if (err) throw err;
   })
 };
 
@@ -137,10 +139,11 @@ const employeeQuestions = [
 // ==========================================================
 
 // Department functions
+// This works
 function addDepartment() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Creating a new department...\n");
-    var query = connection.query(
+    connection.query(
       "INSERT INTO department SET ?",
       {
         name: response.deptName
@@ -165,9 +168,9 @@ function viewByDepartments() {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
+      openProcess();
     })
   })
-  openProcess();
 };
 
 
@@ -183,9 +186,9 @@ function viewDeptBudget() {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
+      openProcess();
     })
   })
-  openProcess();
 };
 
 
@@ -201,12 +204,10 @@ function deleteDepartment() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " departments deleted!\n");
-        // Call readProducts AFTER the DELETE completes
-        // readProducts();
+        openProcess();
       }
     );
   })
-  openProcess();
 };
 
 
@@ -299,6 +300,7 @@ function deleteEmployee() {
 
 //Role functions
 function addRole() {
+  deptList();
   inquirer.prompt(roleQuestions).then(response => {
     console.log("Creating a new role...\n");
     var query = connection.query(
@@ -311,11 +313,9 @@ function addRole() {
       function (err, res) {
         if (err) throw err;
         console.log(res.affectedRows + " department added!\n");
-        // Call updateProduct AFTER the INSERT completes
-        // updateRole();
+        openProcess();
       })
   })
-  openProcess();
 };
 
 
