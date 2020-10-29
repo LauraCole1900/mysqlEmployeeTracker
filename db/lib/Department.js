@@ -1,10 +1,12 @@
+const connection = require("../connection.js");
+
 class Department {
-  constructor(deptName) {
-    this.deptName = deptName
+  constructor(connection) {
+    this.connection = connection;
   };
 
   // Methods
 }
 
 //Export
-module.exports = Department;
+module.exports = new Department(connection);

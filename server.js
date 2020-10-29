@@ -2,6 +2,7 @@ const inquirer = require("inquirer");
 require("console.table");
 const app = require("./db/app.js");
 const Employee = require("./db/lib/Employee.js");
+const connection = require("./db/connection.js");
 
 function openProcess() {
   inquirer.prompt(
@@ -104,7 +105,7 @@ const employeeQuestions = [
 
 // ==========================================================
 
-// "Add" functions
+// Department functions
 function addDepartment() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Creating a new department...\n");
@@ -125,139 +126,11 @@ function addDepartment() {
 };
 
 
-function addEmployee() {
-  let newEmployee;
-  inquirer.prompt(employeeQuestions).then(response => {
-    console.log("Creating a new employee...\n");
-    newEmployee = {
-      first_name: response.firstName,
-      last_name: response.lastName,
-      role_id: response.jobTitle,
-      manager_id: response.managerName
-    }
-    Employee.addEmployee(newEmployee);
-    console.log("Employee added");
-    openProcess();
-  })
-};
-
-
-function addRole() {
-  inquirer.prompt(roleQuestions).then(response => {
-    console.log("Creating a new role...\n");
-    var query = connection.query(
-      "INSERT INTO role SET ?",
-      {
-        title: response.roleTitle,
-        salary: response.roleSalary,
-        department_id: role.Dept
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " department added!\n");
-        // Call updateProduct AFTER the INSERT completes
-        // updateRole();
-      })
-  })
-  openProcess();
-};
-
-
-
-// "Update" functions
-function updateRole() {
-  inquirer.prompt(employeeQuestions).then(response => {
-    console.log("Updating role...\n");
-    var query = connection.query(
-      "UPDATE employee SET ? WHERE ?",
-      [
-        {
-          role: response.jobTitle
-        },
-        {
-          first_name: response.firstName,
-          last_name: response.lastName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " employee role updated!\n");
-        // Call deleteProduct AFTER the UPDATE completes
-        // deleteProduct();
-      })
-  })
-  openProcess();
-};
-
-// Bonus
-function updateManager() {
-  inquirer.prompt(employeeQuestions).then(response => {
-    console.log("Updating manager...\n");
-    var query = connection.query(
-      "UPDATE employee SET ? WHERE ?",
-      [
-        {
-          manager_id: response.ManagerName
-        },
-        {
-          first_name: response.firstName,
-          last_name: response.lastName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " employee manager updated!\n");
-        // Call deleteProduct AFTER the UPDATE completes
-        // deleteProduct();
-      })
-  })
-  openProcess();
-};
-
-
-
-// "View" functions
-async function viewAllEmployees() {
-  console.log("Selecting all employees...\n");
-  const employeesView = await Employee.viewAllEmployees();
-  console.table(employeesView);
-  openProcess();
-};
-
-
 function viewByDepartments() {
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Selecting employees by department...\n");
     // do I need a forEach loop here?
     connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id AND INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
-      if (err) throw err;
-      // Log all results of the SELECT statement
-      console.table(res);
-    })
-  })
-  openProcess();
-};
-
-
-function viewByRole() {
-  inquirer.prompt(roleQuestions[0]).then(response => {
-    console.log("Selecting all employees by role...\n");
-    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
-      if (err) throw err;
-      // Log all results of the SELECT statement
-      console.table(res);
-    })
-  })
-  openProcess();
-};
-
-
-
-// Bonus
-function viewByManager() {
-  inquirer.prompt(employeeQuestions[3]).then(response => {
-    console.log("Selecting employees by manager...\n");
-    connection.query("SELECT * FROM employee", function (err, res) {
       if (err) throw err;
       // Log all results of the SELECT statement
       console.table(res);
@@ -285,8 +158,97 @@ function viewDeptBudget() {
 };
 
 
+// Bonus
+function deleteDepartment() {
+  inquirer.prompt(deptQuestion).then(response => {
+    console.log("Deleting department...\n");
+    connection.query(
+      "DELETE FROM department WHERE ?",
+      {
+        name: response.deptName,
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " departments deleted!\n");
+        // Call readProducts AFTER the DELETE completes
+        // readProducts();
+      }
+    );
+  })
+  openProcess();
+};
 
-// "Delete" functions (all bonus)
+
+
+// Employee functions
+async function addEmployee() {
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Creating a new employee...\n");
+    Employee.addEmployee(newEmployee);
+    let newEmployee = {
+      first_name: response.firstName,
+      last_name: response.lastName,
+      role_id: response.jobTitle,
+      manager_id: response.managerName
+    };
+    console.log("Employee added");
+    openProcess();
+  })
+};
+
+
+// This works
+function viewAllEmployees() {
+  console.log("Selecting all employees...\n");
+  connection.query("SELECT * FROM employee", function (err, res) {
+    if (err) throw err;
+    console.table(res);
+    openProcess();
+  })
+};
+
+
+// Bonus
+function updateManager() {
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Updating manager...\n");
+    var query = connection.query(
+      "UPDATE employee SET ? WHERE ?",
+      [
+        {
+          manager_id: response.ManagerName
+        },
+        {
+          first_name: response.firstName,
+          last_name: response.lastName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employee manager updated!\n");
+        // Call deleteProduct AFTER the UPDATE completes
+        // deleteProduct();
+      })
+  })
+  openProcess();
+};
+
+
+// Bonus
+function viewByManager() {
+  inquirer.prompt(employeeQuestions[3]).then(response => {
+    console.log("Selecting employees by manager...\n");
+    connection.query("SELECT * FROM employee", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.table(res);
+    })
+  })
+  openProcess();
+};
+
+
+// Bonus
 function deleteEmployee() {
   inquirer.prompt(employeeQuestions[0], employeeQuestions[1]).then(response => {
     console.log("Deleting employee...\n");
@@ -308,6 +270,68 @@ function deleteEmployee() {
 };
 
 
+
+//Role functions
+function addRole() {
+  inquirer.prompt(roleQuestions).then(response => {
+    console.log("Creating a new role...\n");
+    var query = connection.query(
+      "INSERT INTO role SET ?",
+      {
+        title: response.roleTitle,
+        salary: response.roleSalary,
+        department_id: role.Dept
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " department added!\n");
+        // Call updateProduct AFTER the INSERT completes
+        // updateRole();
+      })
+  })
+  openProcess();
+};
+
+
+function updateRole() {
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Updating role...\n");
+    var query = connection.query(
+      "UPDATE employee SET ? WHERE ?",
+      [
+        {
+          role: response.jobTitle
+        },
+        {
+          first_name: response.firstName,
+          last_name: response.lastName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log(res.affectedRows + " employee role updated!\n");
+        // Call deleteProduct AFTER the UPDATE completes
+        // deleteProduct();
+      })
+  })
+  openProcess();
+};
+
+
+function viewByRole() {
+  inquirer.prompt(roleQuestions[0]).then(response => {
+    console.log("Selecting all employees by role...\n");
+    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+      if (err) throw err;
+      // Log all results of the SELECT statement
+      console.table(res);
+    })
+  })
+  openProcess();
+};
+
+
+// Bonus
 function deleteRole() {
   inquirer.prompt(roleQuestions[0]).then(response => {
     console.log("Deleting role...\n");
@@ -327,26 +351,9 @@ function deleteRole() {
   openProcess();
 };
 
-function deleteDepartment() {
-  inquirer.prompt(deptQuestion).then(response => {
-    console.log("Deleting department...\n");
-    connection.query(
-      "DELETE FROM department WHERE ?",
-      {
-        name: response.deptName,
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " departments deleted!\n");
-        // Call readProducts AFTER the DELETE completes
-        // readProducts();
-      }
-    );
-  })
-  openProcess();
-};
 
 
+// BEGIN
 openProcess();
 
 // initialize function

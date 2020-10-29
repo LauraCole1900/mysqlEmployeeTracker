@@ -1,12 +1,12 @@
+const connection = require("../connection.js");
+
 class Role {
-  constructor(roleTitle, roleSalary, roleDept) {
-    this.roleTitle = roleTitle;
-    this.roleSalary = roleSalary;
-    this.roleDept = roleDept
+  constructor(connection) {
+    this.connection = connection;
   };
 
   // Methods
 };
 
 // Export
-module.exports = Role;
+module.exports = new Role(connection);
