@@ -182,14 +182,14 @@ function viewByDepartments() {
   inquirer.prompt(listDepts).then(response => {
     console.log("Selecting employees by department...\n");
     connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?",
-    {
-      name: response
-    },
-     function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      openProcess();
-    })
+      {
+        name: response
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        openProcess();
+      })
   }).catch(function (err) {
     if (err) throw err;
   })
@@ -261,7 +261,10 @@ function addRole() {
       {
         title: response.roleTitle,
         salary: response.roleSalary,
-        // need to replace response.roleId with that role's id
+      });
+    connection.query(
+      "SELECT department.name, department.id FROM department WHERE ?; INSERT INTO role SET role.department_id = department.id",
+      {
         department_id: response.roleDept
       },
       function (err, res) {
@@ -276,7 +279,7 @@ function addRole() {
 
 
 function updateRole() {
-  inquirer.prompt(employeeQuestions[0,1,2]).then(response => {
+  inquirer.prompt(employeeQuestions[0, 1, 2]).then(response => {
     console.log("Updating role...\n");
     connection.query(
       "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
@@ -304,14 +307,14 @@ function viewByRole() {
   inquirer.prompt(listRoles).then(response => {
     console.log("Selecting all employees by role...\n");
     connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
-    {
-      title: response.name
-    },
-     function (err, result) {
-      if (err) throw err;
-      console.table(result);
-      openProcess();
-    })
+      {
+        title: response.name
+      },
+      function (err, result) {
+        if (err) throw err;
+        console.table(result);
+        openProcess();
+      })
   }).catch(function (err) {
     if (err) throw err;
   })
