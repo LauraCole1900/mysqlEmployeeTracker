@@ -23,25 +23,13 @@ function openProcess() {
         break
       case "Add role": addRole()
         break
-      case "Delete department": deleteDepartment()
-        break
-      case "Delete employee": deleteEmployee()
-        break
-      case "Delete role": deleteRole()
-        break
-      case "Update employee manager": updateManager()
-        break
       case "Update employee role": updateRole()
         break
       case "View all employees": viewAllEmployees()
         break
       case "View employees by department": viewByDepartments()
         break
-      case "View employees by manager": viewByManager()
-        break
       case "View employees by role": viewByRole()
-        break
-      case "View budget by department": viewDeptBudget()
         break
       default: process.exit();
     }
@@ -50,12 +38,15 @@ function openProcess() {
   })
 };
 
+const deptNames = [];
+const managerNames = [];
+const roleNames = [];
 
 // "Populate list" functions
 // This works
 function deptList() {
   connection.query("SELECT name FROM department", function (err, res) {
-    const deptNames = [];
+    deptNames = [];
     res.forEach(departmentObj => deptNames.push(departmentObj.name))
     return deptNames;
   })
@@ -64,7 +55,7 @@ function deptList() {
 // This works
 function managerList() {
   connection.query("SELECT CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", function (err, res) {
-    const managerNames = [];
+    managerNames = [];
     // loop through the result set and put the values into an array for inquirer
     res.forEach(managerObj => managerNames.push(managerObj.manager_name))
     return managerNames;
@@ -74,7 +65,7 @@ function managerList() {
 // This works
 function roleList() {
   connection.query("SELECT title FROM role", function (err, res) {
-    const roleNames = [];
+    roleNames = [];
     res.forEach(roleObj => roleNames.push(roleObj.title))
     return roleNames;
   })
@@ -104,7 +95,7 @@ const roleQuestions = [
     type: "list",
     message: "In which department is this role?",
     name: "roleDept",
-    choices: deptList()
+    choices: deptNames
   },
 ]
 
@@ -124,13 +115,13 @@ const employeeQuestions = [
     type: "list",
     message: "What is the employee's job title?",
     name: "jobTitle",
-    choices: roleList()
+    choices: roleNames
   },
   {
     type: "list",
     message: "Who is the employee's manager?",
     name: "managerName",
-    choices: managerList()
+    choices: managerNames
   },
 ]
 
@@ -140,7 +131,7 @@ const listDepts =
   type: "list",
   message: "Which department?",
   name: "deptListing",
-  choices: deptList()
+  choices: deptNames
 };
 
 
@@ -149,7 +140,7 @@ const listManagers =
   type: "list",
   message: "Which manager?",
   name: "managerListing",
-  choices: managerList()
+  choices: managerNames
 };
 
 
@@ -158,7 +149,7 @@ const listRoles =
   type: "list",
   message: "Which role?",
   name: "jobList",
-  choices: roleList()
+  choices: roleNames
 }
 
 
@@ -187,56 +178,14 @@ function addDepartment() {
 
 
 function viewByDepartments() {
+  deptList();
   inquirer.prompt(listDepts).then(response => {
     console.log("Selecting employees by department...\n");
-    // do I need a forEach loop here?
     connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE department.name = ?", function (err, res) {
       if (err) throw err;
-      // Log all results of the SELECT statement
       console.table(res);
       openProcess();
     })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// Bonus
-function viewDeptBudget() {
-  inquirer.prompt(deptQuestion).then(response => {
-    console.log("Calculating budget by department...\n");
-    // department.name
-    // number of roles in department: INNER JOIN department.id = roles.department_id -> res.affectedRows
-    // number of employees per role: INNER JOIN roles.id = employees.role_id -> forEach res.affectedRows * roles.salary
-    // add resultant products together and return total
-    connection.query("SELECT * FROM employee", function (err, res) {
-      if (err) throw err;
-      // Log all results of the SELECT statement
-      console.table(res);
-      openProcess();
-    })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// Bonus
-function deleteDepartment() {
-  inquirer.prompt(deptQuestion).then(response => {
-    console.log("Deleting department...\n");
-    connection.query(
-      "DELETE FROM department WHERE ?",
-      {
-        name: response.deptName,
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " departments deleted!\n");
-        openProcess();
-      }
-    );
   }).catch(function (err) {
     if (err) throw err;
   })
@@ -246,17 +195,27 @@ function deleteDepartment() {
 
 // Employee functions
 function addEmployee() {
+  managerList();
+  roleList();
   inquirer.prompt(employeeQuestions).then(response => {
     connection.query("INSERT INTO employee SET ?",
       {
         first_name: response.firstName,
         last_name: response.lastName,
+      });
+    connection.query(
+      "SELECT role.title, role.id FROM role WHERE role.title = ?; INSERT INTO employee SET employee.role_id = role.id",
+      {
         // need to replace response.jobTitle with that role's id
         // Find row in role with value response.jobTitle
         // grab the id of that row
         // input that id into employee.role_id
         // involves role and employee tables 
-        role_id: response.jobTitle,
+        title: response.jobTitle,
+      });
+    connection.query(
+      "SELECT id FROM employee WHERE SUBSTRING_INDEX(?,' ',1) = first_name AND SUBSTRING_INDEX(?,' ',-1) = last_name INSERT INTO employee SET id = manager_id",
+      {
         // need to replace response.managerName with that manager's id
         // parse name into first_name, last_name
         // Find row with those values
@@ -267,9 +226,8 @@ function addEmployee() {
       function (err, res) {
         if (err) throw err;
         console.log("Employee added!\n");
-        openProcess();
-      }
-    );
+      });
+    openProcess();
   }).catch(function (err) {
     if (err) throw err;
   })
@@ -279,75 +237,12 @@ function addEmployee() {
 // This works
 function viewAllEmployees() {
   console.log("Selecting all employees...\n");
-  connection.query("SELECT * FROM employee", function (err, res) {
-    if (err) throw err;
-    console.table(res);
-    openProcess();
-  })
-};
-
-
-// Bonus
-function updateManager() {
-  inquirer.prompt(employeeQuestions).then(response => {
-    console.log("Updating manager...\n");
-    connection.query(
-      "UPDATE employee SET ? WHERE ?",
-      [
-        {
-          manager_id: response.ManagerName
-        },
-        {
-          first_name: response.firstName,
-          last_name: response.lastName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " employee manager updated!\n");
-        openProcess();
-      })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// Bonus
-function viewByManager() {
-  inquirer.prompt(employeeQuestions[3]).then(response => {
-    console.log("Selecting employees by manager...\n");
-    connection.query("SELECT * FROM employee", function (err, res) {
+  connection.query(
+    "SELECT * FROM employee", function (err, res) {
       if (err) throw err;
-      // Log all results of the SELECT statement
       console.table(res);
       openProcess();
     })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// Bonus
-function deleteEmployee() {
-  inquirer.prompt(employeeQuestions[0], employeeQuestions[1]).then(response => {
-    console.log("Deleting employee...\n");
-    connection.query(
-      "DELETE FROM employee WHERE ?",
-      {
-        first_name: response.firstName,
-        last_name: response.lastName
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " employees deleted!\n");
-        openProcess();
-      }
-    );
-  }).catch(function (err) {
-    if (err) throw err;
-  })
 };
 
 
@@ -380,10 +275,10 @@ function updateRole() {
   inquirer.prompt(employeeQuestions).then(response => {
     console.log("Updating role...\n");
     connection.query(
-      "UPDATE employee SET ? WHERE ?",
+      "SELECT role.title, role.id FROM role WHERE role.title = ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
       [
         {
-          role: response.jobTitle
+          title: response.jobTitle
         },
         {
           first_name: response.firstName,
@@ -404,9 +299,8 @@ function updateRole() {
 function viewByRole() {
   inquirer.prompt(roleQuestions[0]).then(response => {
     console.log("Selecting all employees by role...\n");
-    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id", function (err, res) {
+    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE role.title = ?", function (err, res) {
       if (err) throw err;
-      // Log all results of the SELECT statement
       console.table(res);
       openProcess();
     })
@@ -415,26 +309,6 @@ function viewByRole() {
   })
 };
 
-
-// Bonus
-function deleteRole() {
-  inquirer.prompt(roleQuestions[0]).then(response => {
-    console.log("Deleting role...\n");
-    connection.query(
-      "DELETE FROM role WHERE ?",
-      {
-        title: response.roleTitle,
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " roles deleted!\n");
-        openProcess();
-      }
-    );
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
 
 
 
