@@ -12,7 +12,7 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View budget by department", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Update employee role", "View all employees", "View employees by department", "View employees by role", "Done"]
     }
   ).then(function (response) {
     console.log(response)
