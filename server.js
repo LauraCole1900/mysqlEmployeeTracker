@@ -135,13 +135,13 @@ const listDepts =
 };
 
 
-const listManagers =
-{
-  type: "list",
-  message: "Which manager?",
-  name: "managerListing",
-  choices: managerNames
-};
+// const listManagers =
+// {
+//   type: "list",
+//   message: "Which manager?",
+//   name: "managerListing",
+//   choices: managerNames
+// };
 
 
 const listRoles =
@@ -276,7 +276,7 @@ function addRole() {
 
 
 function updateRole() {
-  inquirer.prompt(employeeQuestions).then(response => {
+  inquirer.prompt(employeeQuestions[0,1,2]).then(response => {
     console.log("Updating role...\n");
     connection.query(
       "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
@@ -301,7 +301,7 @@ function updateRole() {
 
 
 function viewByRole() {
-  inquirer.prompt(roleQuestions[0]).then(response => {
+  inquirer.prompt(listRoles).then(response => {
     console.log("Selecting all employees by role...\n");
     connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
     {
