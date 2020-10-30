@@ -181,7 +181,11 @@ function viewByDepartments() {
   deptList();
   inquirer.prompt(listDepts).then(response => {
     console.log("Selecting employees by department...\n");
-    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE department.name = ?", function (err, res) {
+    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?",
+    {
+      name: response
+    },
+     function (err, res) {
       if (err) throw err;
       console.table(res);
       openProcess();
@@ -204,7 +208,7 @@ function addEmployee() {
         last_name: response.lastName,
       });
     connection.query(
-      "SELECT role.title, role.id FROM role WHERE role.title = ?; INSERT INTO employee SET employee.role_id = role.id",
+      "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id",
       {
         // need to replace response.jobTitle with that role's id
         // Find row in role with value response.jobTitle
@@ -275,7 +279,7 @@ function updateRole() {
   inquirer.prompt(employeeQuestions).then(response => {
     console.log("Updating role...\n");
     connection.query(
-      "SELECT role.title, role.id FROM role WHERE role.title = ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
+      "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
       [
         {
           title: response.jobTitle
@@ -299,16 +303,19 @@ function updateRole() {
 function viewByRole() {
   inquirer.prompt(roleQuestions[0]).then(response => {
     console.log("Selecting all employees by role...\n");
-    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE role.title = ?", function (err, res) {
+    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
+    {
+      title: response.name
+    },
+     function (err, result) {
       if (err) throw err;
-      console.table(res);
+      console.table(result);
       openProcess();
     })
   }).catch(function (err) {
     if (err) throw err;
   })
 };
-
 
 
 
