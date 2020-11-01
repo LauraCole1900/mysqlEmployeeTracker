@@ -1,9 +1,9 @@
 const inquirer = require("inquirer");
 require("console.table");
-const app = require("./db/app.js");
-const Employee = require("./db/lib/Employee.js");
 const connection = require("./db/connection.js");
 
+let deptNames = [];
+let managerNames = [];
 
 // function to open the process
 function openProcess() {
@@ -12,12 +12,12 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Update employee role", "View all employees", "View employees by department", "View employees by role", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
     }
   ).then(function (response) {
     console.log(response)
     switch (response.action) {
-      case "Add department": addDepartment()
+      case "Add department": addDepartment() //works
         break
       case "Add employee": addEmployee()
         break
@@ -25,11 +25,15 @@ function openProcess() {
         break
       case "Update employee role": updateRole()
         break
-      case "View all employees": viewAllEmployees()
+      case "View departments": viewDepartments() //works
         break
-      case "View employees by department": viewByDepartments()
+      case "View all employees": viewAllEmployees() //works
+        break
+      case "View employees by department": viewByDepartments() //works
         break
       case "View employees by role": viewByRole()
+        break
+      case "View roles": viewRoles() //works
         break
       default: process.exit();
     }
@@ -38,126 +42,136 @@ function openProcess() {
   })
 };
 
-const deptNames = [];
-const managerNames = [];
-const roleNames = [];
 
-// "Populate list" functions
-// This works
-function deptList() {
-  connection.query("SELECT name FROM department", function (err, res) {
-    deptNames = [];
-    res.forEach(departmentObj => deptNames.push(departmentObj.name))
-    return deptNames;
-  })
-}
-
-// This works
-function managerList() {
-  connection.query("SELECT CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", function (err, res) {
-    managerNames = [];
-    // loop through the result set and put the values into an array for inquirer
-    res.forEach(managerObj => managerNames.push(managerObj.manager_name))
-    return managerNames;
-  })
-}
-
-// This works
-function roleList() {
-  connection.query("SELECT title FROM role", function (err, res) {
-    roleNames = [];
-    res.forEach(roleObj => roleNames.push(roleObj.title))
-    return roleNames;
-  })
+function getDeptNames() {
+  return new Promise(function (resolve, reject) {
+    connection.query("SELECT name FROM department", function (err, res) {
+      const names = res.map(obj => obj.name);
+      resolve(names);
+    })
+  });
 };
 
-
-const deptQuestion =
-{
-  type: "input",
-  message: "Name of department?",
-  name: "deptName"
+function getManagerNames() {
+  return new Promise(function (resolve, reject) {
+    const queryStr = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
+    connection.query(queryStr, function (err, res) {
+      const names = res.map(obj => obj.manager_name);
+      resolve(names);
+    })
+  });
 };
 
+function getRoleNames() {
+  return new Promise(function (resolve, reject) {
+    connection.query("SELECT id, title FROM role", function (err, res) {
+      const names = res.map(obj => obj.title);
+      resolve(names);
+    })
+  });
+};
 
-const roleQuestions = [
-  {
-    type: "input",
-    message: "Name of role?",
-    name: "roleTitle"
-  },
-  {
-    type: "number",
-    message: "What is this role's salary?",
-    name: "roleSalary"
-  },
-  {
+function getDepartmentId(questionObj) {
+  return new Promise(function (resolve, reject) {
+    inquirer.prompt(questionObj).then(response => {
+      const queryStr = "SELECT id FROM department WHERE ?";
+      connection.query(queryStr, { name: response.roleDept }, function (err, data) {
+        resolve(data[0].id)
+      })
+    });
+  });
+};
+
+// Inserts the department names array and returns all the role questions
+function getRoleQuestions(deptNames) {
+  return [
+    {
+      type: "input",
+      message: "Name of role?",
+      name: "roleTitle"
+    },
+    {
+      type: "number",
+      message: "What is this role's salary?",
+      name: "roleSalary"
+    },
+    {
+      type: "list",
+      message: "In which department is this role?",
+      name: "roleDept",
+      choices: deptNames
+    }
+  ]
+};
+
+// Inserts the manager and role names arrays and returns all the employee questions
+function getEmployeeQuestions(managerNames, roleNames) {
+  return [
+    {
+      type: "input",
+      message: "What is the employee's first name?",
+      name: "firstName"
+    },
+    {
+      type: "input",
+      message: "What is the employee's last name?",
+      name: "lastName"
+    },
+    {
+      type: "list",
+      message: "What is the employee's job title?",
+      name: "jobTitle",
+      choices: roleNames
+    },
+    {
+      type: "list",
+      message: "Who is the employee's manager?",
+      name: "managerName",
+      choices: managerNames
+    },
+  ];
+};
+
+// Inserts the department names array and returns the dept question
+function getDepartmentQuestion(deptNames) {
+  return {
     type: "list",
-    message: "In which department is this role?",
-    name: "roleDept",
+    message: "Which department?",
+    name: "deptListing",
     choices: deptNames
-  },
-]
-
-
-const employeeQuestions = [
-  {
-    type: "input",
-    message: "What is the employee's first name?",
-    name: "firstName"
-  },
-  {
-    type: "input",
-    message: "What is the employee's last name?",
-    name: "lastName"
-  },
-  {
-    type: "list",
-    message: "What is the employee's job title?",
-    name: "jobTitle",
-    choices: roleNames
-  },
-  {
-    type: "list",
-    message: "Who is the employee's manager?",
-    name: "managerName",
-    choices: managerNames
-  },
-]
-
-
-const listDepts =
-{
-  type: "list",
-  message: "Which department?",
-  name: "deptListing",
-  choices: deptNames
+  };
 };
 
-
-// const listManagers =
-// {
-//   type: "list",
-//   message: "Which manager?",
-//   name: "managerListing",
-//   choices: managerNames
-// };
-
-
-const listRoles =
-{
-  type: "list",
-  message: "Which role?",
-  name: "jobList",
-  choices: roleNames
-}
-
+// Inserts the role names array and returns the role question
+function getRoleNameQuestion(roleNames) {
+  return {
+    type: "list",
+    message: "Which role?",
+    name: "jobList",
+    choices: roleNames
+  }
+};
 
 // ==========================================================
-
 // Department functions
-// This works
-function addDepartment() {
+// THIS WORKS
+function viewDepartments() {
+  console.log("Selecting all departments...\n");
+  connection.query(
+    "SELECT * FROM department", function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
+};
+
+// THIS WORKS
+async function addDepartment() {
+  const deptQuestion = {
+    type: "input",
+    message: "Name of department?",
+    name: "deptName"
+  };
   inquirer.prompt(deptQuestion).then(response => {
     console.log("Creating a new department...\n");
     connection.query(
@@ -176,14 +190,21 @@ function addDepartment() {
   })
 };
 
-
-function viewByDepartments() {
-  deptList();
-  inquirer.prompt(listDepts).then(response => {
+// THIS WORKS
+async function viewByDepartments() {
+  const deptNames = await getDeptNames();
+  const deptListQ = {
+    type: "list",
+    message: "Which department?",
+    name: "chosenDept",
+    choices: deptNames
+  };
+  inquirer.prompt(deptListQ).then(response => {
+    console.log(response);
     console.log("Selecting employees by department...\n");
     connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?",
       {
-        name: response
+        name: response.chosenDept
       },
       function (err, res) {
         if (err) throw err;
@@ -196,49 +217,58 @@ function viewByDepartments() {
 };
 
 
-
 // Employee functions
-function addEmployee() {
-  managerList();
-  roleList();
-  inquirer.prompt(employeeQuestions).then(response => {
-    connection.query("INSERT INTO employee SET ?",
-      {
-        first_name: response.firstName,
-        last_name: response.lastName,
-      });
-    connection.query(
-      "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id",
-      {
-        // need to replace response.jobTitle with that role's id
-        // Find row in role with value response.jobTitle
-        // grab the id of that row
-        // input that id into employee.role_id
-        // involves role and employee tables 
-        title: response.jobTitle,
-      });
-    connection.query(
-      "SELECT id FROM employee WHERE SUBSTRING_INDEX(?,' ',1) = first_name AND SUBSTRING_INDEX(?,' ',-1) = last_name INSERT INTO employee SET id = manager_id",
-      {
-        // need to replace response.managerName with that manager's id
-        // parse name into first_name, last_name
-        // Find row with those values
-        // grab the id of that row
-        // input that id here
-        manager_id: response.managerName
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log("Employee added!\n");
-      });
-    openProcess();
-  }).catch(function (err) {
-    if (err) throw err;
-  })
+async function addEmployee() {
+  const managerNames = await getManagerNames();
+  const roleNames = await getRoleNames();
+  const employeeQuestions = getEmployeeQuestions(managerNames, roleNames);
+  console.log(roleNames);
+  const { firstName, lastName } = await inquirer.prompt([
+    {
+      type: "input",
+      message: "What is the employee's first name?",
+      name: "firstName"
+    },
+    {
+      type: "input",
+      message: "What is the employee's last name?",
+      name: "lastName"
+    },
+  ])
+  const roleChoices = roleNames.map(({ id, title }) => ({ name: title, value: id }))
+  console.log(roleChoices);
+  const { roleId } = await inquirer.prompt(
+    {
+      type: "list",
+      message: "What is this employee's role?",
+      name: "roleId",
+      choices: roleChoices
+    },
+  )
+  const managerChoices = managerNames.map(({ id, manager_name }) => ({ name: manager_name, value: id }))
+  const { managerId } = await inquirer.prompt(
+    {
+      type: "list",
+      message: "Who is this employee's manager?",
+      name: "managerId",
+      choices: managerChoices
+    },
+  )
+  await connection.query("INSERT INTO employee SET ?",
+    {
+      first_name: firstName,
+      last_name: lastName,
+      role_id: roleId,
+      manager_id: managerId
+    });
+  // function (err, res) {
+  //   if (err) throw err;
+  console.log("Employee added!\n");
+  // };
+  openProcess();
 };
 
-
-// This works
+// THIS WORKS
 function viewAllEmployees() {
   console.log("Selecting all employees...\n");
   connection.query(
@@ -249,37 +279,48 @@ function viewAllEmployees() {
     })
 };
 
-
-
-//Role functions
-function addRole() {
-  deptList();
+// Role functions
+async function addRole() {
+  const deptNames = await getDeptNames();
+  const roleQuestions = await getRoleQuestions(deptNames);
   inquirer.prompt(roleQuestions).then(response => {
+    const deptId = getDepartmentId(roleQuestions.roleDept);
     console.log("Creating a new role...\n");
     connection.query(
       "INSERT INTO role SET ?",
       {
         title: response.roleTitle,
         salary: response.roleSalary,
+        department_id: deptId
       });
-    connection.query(
-      "SELECT department.name, department.id FROM department WHERE ?; INSERT INTO role SET role.department_id = department.id",
-      {
-        department_id: response.roleDept
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " department added!\n");
-        openProcess();
-      })
+    /* *****************************************************
+    I think the code you have below needs to go inside
+    the callback function of the query above. This part 
+    of the code is real tricky. Using some of the code I 
+    added above, see if you can make Promise-based functions 
+    that do additional queries for matching dept id with 
+    name, etc.
+    ******************************************************* */
+    // connection.query(
+    //   "SELECT department.name, department.id FROM department INNER JOIN role ON department.id = role.department_id WHERE ?; INSERT INTO role SET role.department_id = department.id",
+    //   {
+    //     department_id: response.roleDept
+    //   },
+    // function (err, res) {
+    //   if (err) throw err;
+    //   console.log(res.affectedRows + " department added!\n");
+    //   openProcess();
+    // }
   }).catch(function (err) {
     if (err) throw err;
   })
 };
 
-
-function updateRole() {
-  inquirer.prompt(employeeQuestions[0, 1, 2]).then(response => {
+async function updateRole() {
+  const managerNames = await getManagerNames();
+  const roleNames = await getRoleNames();
+  const employeeQuestions = getEmployeeQuestions(managerNames, roleNames);
+  inquirer.prompt(employeeQuestions).then(response => {
     console.log("Updating role...\n");
     connection.query(
       "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
@@ -302,13 +343,15 @@ function updateRole() {
   })
 };
 
-
-function viewByRole() {
-  inquirer.prompt(listRoles).then(response => {
+// THIS WORKS
+async function viewByRole() {
+  const roleNames = await getRoleNames();
+  const roleQuestion = await getRoleNameQuestion(roleNames);
+  inquirer.prompt(roleQuestion).then(response => {
     console.log("Selecting all employees by role...\n");
     connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
       {
-        title: response.name
+        title: response.jobList
       },
       function (err, result) {
         if (err) throw err;
@@ -320,6 +363,16 @@ function viewByRole() {
   })
 };
 
+// THIS WORKS
+function viewRoles() {
+  console.log("Selecting all roles...\n");
+  connection.query(
+    "SELECT id, title FROM role", function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
+};
 
 
 // BEGIN
