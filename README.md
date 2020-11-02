@@ -14,7 +14,7 @@
 
   ## Description
 
-  This is a CLI employee management system application using Inquirer.js and MySQL. This system allows the user to add employees, departments, and roles; view employees (all, by department, and by role); and update employee roles. After drilling down into the containing folder, the user should run "npm install", then open the process by entering "node server.js", at which point the application will ask the user to select a function, then walk the user through prompts to execute the selected function.
+  This is a CLI employee management system application using Inquirer.js and MySQL. This system allows the user to add employees, departments, and roles; view employees (all, by department, and by role), departments, and roles; update employee roles; and delete employees. After drilling down into the containing folder, the user should run "npm install", then open the process by entering "node server.js", at which point the application will ask the user to select a function, then walk the user through prompts to execute the selected function.
 
   [Link to walkthrough video](https://drive.google.com/file/d/1DgOUViC2f2u1_8Rzs9dJn8En8X5Ml32L/view)
 
