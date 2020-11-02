@@ -110,7 +110,7 @@ function getManagerId(questionObj) {
       const fName = mName[0];
       const lName = mName[1];
       const queryStr = "SELECT id FROM employee WHERE ?";
-      connection.query(queryStr, { first_name: fName }, function (err, data) {
+      connection.query(queryStr, [{ first_name: fName }, { last_name: lName}], function (err, data) {
         resolve(data[0].id)
       })
     });
