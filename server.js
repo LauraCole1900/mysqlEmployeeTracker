@@ -109,8 +109,8 @@ function getManagerId(questionObj) {
       const mName = response.managerName.split(" ");
       const fName = mName[0];
       const lName = mName[1];
-      const queryStr = "SELECT id FROM employee WHERE ?";
-      connection.query(queryStr, { first_name: fName, last_name: lName }, function (err, data) {
+      const queryStr = "SELECT id FROM employee WHERE ? AND ?";
+      connection.query(queryStr, { first_name: fName }, { last_name: lName }, function (err, data) {
         resolve(data[0].id)
       })
     });
@@ -172,7 +172,7 @@ function getDepartmentQuestion(deptNames) {
   return {
     type: "list",
     message: "Which department?",
-    name: "deptListing",
+    name: "chosenDept",
     choices: deptNames
   };
 };
@@ -228,13 +228,7 @@ async function addDepartment() {
 // THIS WORKS
 async function viewByDepartments() {
   const deptNames = await getDeptNames();
-  const deptListQ =
-  {
-    type: "list",
-    message: "Which department?",
-    name: "chosenDept",
-    choices: deptNames
-  };
+  const deptListQ = await getDepartmentQuestion(deptNames);
   inquirer.prompt(deptListQ).then(response => {
     console.log(response);
     console.log("Selecting employees by department...\n");
@@ -259,9 +253,19 @@ async function addEmployee() {
   const roleNames = await getRoleNames();
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
   const roleId = await getRoleId(employeeQuestions[2]);
-  // const managerId = getManagerId(employeeQuestions[3]);
-  // console.log(managerId);
-  inquirer.prompt(employeeQuestions).then(response => {
+  const managerId = await getManagerId(employeeQuestions[3]);
+  inquirer.prompt([
+      {
+        type: "input",
+        message: "What is the employee's first name?",
+        name: "firstName"
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lastName"
+      },
+    ]).then(response => {
     console.log("Adding employee...\n");
     connection.query(
       "INSERT INTO employee SET ?",
@@ -269,7 +273,7 @@ async function addEmployee() {
         first_name: response.firstName,
         last_name: response.lastName,
         role_id: roleId,
-        // manager_id: managerId
+        manager_id: managerId
       },
       function (err, res) {
         if (err) throw err;
