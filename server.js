@@ -21,7 +21,7 @@ function openProcess() {
         break
       case "Add employee": addEmployee()
         break
-      case "Add role": addRole() //works, almost right
+      case "Add role": addRole() //works
         break
       case "Update employee role": updateRole()
         break
@@ -52,6 +52,16 @@ function getDeptNames() {
   });
 };
 
+function getEmployeeNames() {
+  return new Promise(function (resolve, reject) {
+    const queryStr = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+    connection.query(queryStr, function (err, res) {
+      const names = res.map(obj => obj.employee_name);
+      resolve(names);
+    })
+  })
+}
+
 function getManagerNames() {
   return new Promise(function (resolve, reject) {
     const queryStr = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
@@ -76,6 +86,17 @@ function getDepartmentId(questionObj) {
     inquirer.prompt(questionObj).then(response => {
       const queryStr = "SELECT id FROM department WHERE ?";
       connection.query(queryStr, { name: response.roleDept }, function (err, data) {
+        resolve(data[0].id)
+      })
+    });
+  });
+};
+
+function getRoleId(questionObj) {
+  return new Promise(function (resolve, reject) {
+    inquirer.prompt(questionObj).then(response => {
+      const queryStr = "SELECT id FROM role WHERE ?";
+      connection.query(queryStr, { title: response.jobTitle }, function (err, data) {
         resolve(data[0].id)
       })
     });
@@ -193,7 +214,8 @@ async function addDepartment() {
 // THIS WORKS
 async function viewByDepartments() {
   const deptNames = await getDeptNames();
-  const deptListQ = {
+  const deptListQ =
+  {
     type: "list",
     message: "Which department?",
     name: "chosenDept",
@@ -221,51 +243,26 @@ async function viewByDepartments() {
 async function addEmployee() {
   const managerNames = await getManagerNames();
   const roleNames = await getRoleNames();
-  const employeeQuestions = getEmployeeQuestions(managerNames, roleNames);
-  console.log(roleNames);
-  const { firstName, lastName } = await inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the employee's first name?",
-      name: "firstName"
-    },
-    {
-      type: "input",
-      message: "What is the employee's last name?",
-      name: "lastName"
-    },
-  ])
-  const roleChoices = roleNames.map(({ id, title }) => ({ name: title, value: id }))
-  console.log(roleChoices);
-  const { roleId } = await inquirer.prompt(
-    {
-      type: "list",
-      message: "What is this employee's role?",
-      name: "roleId",
-      choices: roleChoices
-    },
-  )
-  const managerChoices = managerNames.map(({ id, manager_name }) => ({ name: manager_name, value: id }))
-  const { managerId } = await inquirer.prompt(
-    {
-      type: "list",
-      message: "Who is this employee's manager?",
-      name: "managerId",
-      choices: managerChoices
-    },
-  )
-  await connection.query("INSERT INTO employee SET ?",
-    {
-      first_name: firstName,
-      last_name: lastName,
-      role_id: roleId,
-      manager_id: managerId
-    });
-  // function (err, res) {
-  //   if (err) throw err;
-  console.log("Employee added!\n");
-  // };
-  openProcess();
+  const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
+  const roleId = await getRoleId(employeeQuestions[2]);
+  inquirer.prompt(employeeQuestions).then(response => {
+    console.log("Adding employee...\n");
+    connection.query(
+      "INSERT INTO employee SET ?",
+      {
+        first_name: response.firstName,
+        last_name: response.lastName,
+        role_id: roleId,
+        // manager_id: 
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log("Role added!\n");
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  })
 };
 
 // THIS WORKS
@@ -280,7 +277,7 @@ function viewAllEmployees() {
 };
 
 // Role functions
-// THIS WORKS, almost right: inquirer.prompt questions duplicated here and in getDepartmentId()
+// THIS WORKS
 async function addRole() {
   const deptNames = await getDeptNames();
   const roleQuestions = await getRoleQuestions(deptNames);
@@ -317,16 +314,31 @@ async function addRole() {
 };
 
 async function updateRole() {
-  const managerNames = await getManagerNames();
+  const employeeNames = await getEmployeeNames();
   const roleNames = await getRoleNames();
-  const employeeQuestions = getEmployeeQuestions(managerNames, roleNames);
-  inquirer.prompt(employeeQuestions).then(response => {
+  const roleId = await getRoleId();
+  inquirer.prompt(
+    [
+      {
+        type: "list",
+        message: "Which employee?",
+        name: "employeeChoice",
+        choices: employeeNames
+      },
+      {
+        type: "list",
+        message: "New role?",
+        name: "newRole",
+        choices: roleNames
+      }
+    ])
+    await getRoleId(response).then(response => {
     console.log("Updating role...\n");
     connection.query(
-      "SELECT role.title, role.id FROM role WHERE ?; INSERT INTO employee SET employee.role_id = role.id WHERE ? AND ?",
+      "UPDATE employee SET ? WHERE ? AND ?",
       [
         {
-          title: response.jobTitle
+          role_id: roleId
         },
         {
           first_name: response.firstName,
