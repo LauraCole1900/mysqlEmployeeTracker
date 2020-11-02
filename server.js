@@ -12,28 +12,30 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
     }
   ).then(function (response) {
     console.log(response)
     switch (response.action) {
-      case "Add department": addDepartment() //works
+      case "Add department": addDepartment()
         break
       case "Add employee": addEmployee()
         break
-      case "Add role": addRole() //works
+      case "Add role": addRole()
         break
-      case "Update employee role": updateRole() //works
+      case "Delete employee": deleteEmployee()
         break
-      case "View departments": viewDepartments() //works
+      case "Update employee role": updateRole()
         break
-      case "View all employees": viewAllEmployees() //works
+      case "View departments": viewDepartments()
         break
-      case "View employees by department": viewByDepartments() //works
+      case "View all employees": viewAllEmployees()
         break
-      case "View employees by role": viewByRole() //works
+      case "View employees by department": viewByDepartments()
         break
-      case "View roles": viewRoles() //works
+      case "View employees by role": viewByRole()
+        break
+      case "View roles": viewRoles()
         break
       default: process.exit();
     }
@@ -42,7 +44,7 @@ function openProcess() {
   })
 };
 
-
+// Creates list of departments
 function getDeptNames() {
   return new Promise(function (resolve, reject) {
     connection.query("SELECT name FROM department", function (err, res) {
@@ -52,6 +54,7 @@ function getDeptNames() {
   });
 };
 
+// Creates list of employees
 function getEmployeeNames() {
   return new Promise(function (resolve, reject) {
     const queryStr = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
@@ -62,6 +65,7 @@ function getEmployeeNames() {
   })
 }
 
+// Creates list of managers
 function getManagerNames() {
   return new Promise(function (resolve, reject) {
     const queryStr = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
@@ -72,6 +76,7 @@ function getManagerNames() {
   });
 };
 
+// Creates list of roles
 function getRoleNames() {
   return new Promise(function (resolve, reject) {
     connection.query("SELECT id, title FROM role", function (err, res) {
@@ -81,6 +86,7 @@ function getRoleNames() {
   });
 };
 
+// Resolves department_id for role table when given name of department
 function getDepartmentId(questionObj) {
   return new Promise(function (resolve, reject) {
     inquirer.prompt(questionObj).then(response => {
@@ -92,6 +98,7 @@ function getDepartmentId(questionObj) {
   });
 };
 
+// Resolves role_id for employee table when given name of role
 function getRoleId(questionObj) {
   return new Promise(function (resolve, reject) {
     inquirer.prompt(questionObj).then(response => {
@@ -103,6 +110,7 @@ function getRoleId(questionObj) {
   });
 };
 
+// Resolves manager_id for employee table when given manager's name
 function getManagerId(questionObj) {
   return new Promise(function (resolve, reject) {
     inquirer.prompt(questionObj).then(response => {
@@ -110,26 +118,16 @@ function getManagerId(questionObj) {
       const fName = mName[0];
       const lName = mName[1];
       const queryStr = "SELECT id FROM employee WHERE ?";
-      connection.query(queryStr, [{ first_name: fName }, { last_name: lName}], function (err, data) {
+      connection.query(queryStr, [{ first_name: fName }, { last_name: lName }], function (err, data) {
         resolve(data[0].id)
       })
     });
   });
 };
 
-// Inserts the department names array and returns all the role questions
-function getRoleQuestions(deptNames) {
+// Inserts the department names array into answer choices and returns relevant role question
+function getRoleDeptQuestion(deptNames) {
   return [
-    {
-      type: "input",
-      message: "Name of role?",
-      name: "roleTitle"
-    },
-    {
-      type: "number",
-      message: "What is this role's salary?",
-      name: "roleSalary"
-    },
     {
       type: "list",
       message: "In which department is this role?",
@@ -139,19 +137,9 @@ function getRoleQuestions(deptNames) {
   ]
 };
 
-// Inserts the manager and role names arrays and returns all the employee questions
+// Inserts the manager and role names arrays into answer choices and returns relevant employee questions
 function getEmployeeQuestions(managerNames, roleNames) {
   return [
-    {
-      type: "input",
-      message: "What is the employee's first name?",
-      name: "firstName"
-    },
-    {
-      type: "input",
-      message: "What is the employee's last name?",
-      name: "lastName"
-    },
     {
       type: "list",
       message: "What is the employee's job title?",
@@ -167,7 +155,7 @@ function getEmployeeQuestions(managerNames, roleNames) {
   ];
 };
 
-// Inserts the department names array and returns the dept question
+// Inserts the department names array into answer choices and returns the dept question
 function getDepartmentQuestion(deptNames) {
   return {
     type: "list",
@@ -177,7 +165,7 @@ function getDepartmentQuestion(deptNames) {
   };
 };
 
-// Inserts the role names array and returns the role question
+// Inserts the role names array into answer choices and returns the role question
 function getRoleNameQuestion(roleNames) {
   return {
     type: "list",
@@ -187,9 +175,18 @@ function getRoleNameQuestion(roleNames) {
   }
 };
 
+// Inserts the employee names array into answer choices and returns the employee question
+function getEmployeeNameQuestion(employeeNames) {
+  return {
+    type: "list",
+    message: "Which employee?",
+    name: "employeeChoice",
+    choices: employeeNames
+  }
+};
+
 // ==========================================================
 // Department functions
-// THIS WORKS
 function viewDepartments() {
   console.log("Selecting all departments...\n");
   connection.query(
@@ -200,7 +197,7 @@ function viewDepartments() {
     })
 };
 
-// THIS WORKS
+
 async function addDepartment() {
   const deptQuestion = {
     type: "input",
@@ -225,7 +222,7 @@ async function addDepartment() {
   })
 };
 
-// THIS WORKS
+
 async function viewByDepartments() {
   const deptNames = await getDeptNames();
   const deptListQ = await getDepartmentQuestion(deptNames);
@@ -247,25 +244,26 @@ async function viewByDepartments() {
 };
 
 
+
 // Employee functions
 async function addEmployee() {
   const managerNames = await getManagerNames();
   const roleNames = await getRoleNames();
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
-  const roleId = await getRoleId(employeeQuestions[2]);
-  const managerId = await getManagerId(employeeQuestions[3]);
+  const roleId = await getRoleId(employeeQuestions[0]);
+  const managerId = await getManagerId(employeeQuestions[1]);
   inquirer.prompt([
-      {
-        type: "input",
-        message: "What is the employee's first name?",
-        name: "firstName"
-      },
-      {
-        type: "input",
-        message: "What is the employee's last name?",
-        name: "lastName"
-      },
-    ]).then(response => {
+    {
+      type: "input",
+      message: "What is the employee's first name?",
+      name: "firstName"
+    },
+    {
+      type: "input",
+      message: "What is the employee's last name?",
+      name: "lastName"
+    },
+  ]).then(response => {
     console.log("Adding employee...\n");
     connection.query(
       "INSERT INTO employee SET ?",
@@ -285,7 +283,35 @@ async function addEmployee() {
   })
 };
 
-// THIS WORKS
+
+async function deleteEmployee() {
+  const employeeNames = await getEmployeeNames();
+  const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
+  inquirer.prompt(employeeQuestion).then(response => {
+    const eName = response.employeeChoice.split(" ");
+    const fName = eName[0];
+    const lName = eName[1];
+    connection.query(
+      "DELETE FROM employee WHERE ? AND ?",
+      [
+        {
+          first_name: fName
+        },
+        {
+          last_name: lName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log("Employee deleted!\n");
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  });
+};
+
+
 function viewAllEmployees() {
   console.log("Selecting all employees...\n");
   connection.query(
@@ -296,12 +322,13 @@ function viewAllEmployees() {
     })
 };
 
+
+
 // Role functions
-// THIS WORKS
 async function addRole() {
   const deptNames = await getDeptNames();
-  const roleQuestions = await getRoleQuestions(deptNames);
-  const deptId = await getDepartmentId(roleQuestions[2]);
+  const roleQuestion = await getRoleDeptQuestion(deptNames);
+  const deptId = await getDepartmentId(roleQuestion);
   inquirer.prompt(
     [
       {
@@ -333,7 +360,7 @@ async function addRole() {
     })
 };
 
-// THIS WORKS
+
 async function updateRole() {
   const employeeNames = await getEmployeeNames();
   const roleNames = await getRoleNames();
@@ -375,7 +402,7 @@ async function updateRole() {
     })
 };
 
-// THIS WORKS
+
 async function viewByRole() {
   const roleNames = await getRoleNames();
   const roleQuestion = await getRoleNameQuestion(roleNames);
@@ -395,7 +422,7 @@ async function viewByRole() {
   })
 };
 
-// THIS WORKS
+
 function viewRoles() {
   console.log("Selecting all roles...\n");
   connection.query(
