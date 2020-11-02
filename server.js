@@ -109,8 +109,8 @@ function getManagerId(questionObj) {
       const mName = response.managerName.split(" ");
       const fName = mName[0];
       const lName = mName[1];
-      const queryStr = "SELECT id FROM employee WHERE ? AND ?";
-      connection.query(queryStr, { first_name: fName }, { last_name: lName }, function (err, data) {
+      const queryStr = "SELECT id FROM employee WHERE ?";
+      connection.query(queryStr, { first_name: fName }, function (err, data) {
         resolve(data[0].id)
       })
     });
@@ -277,7 +277,7 @@ async function addEmployee() {
       },
       function (err, res) {
         if (err) throw err;
-        console.log("Role added!\n");
+        console.log("Employee added!\n");
         openProcess();
       });
   }).catch(function (err) {
