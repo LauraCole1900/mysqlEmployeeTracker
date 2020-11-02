@@ -5,6 +5,7 @@ const connection = require("./db/connection.js");
 let deptNames = [];
 let managerNames = [];
 
+
 // function to open the process
 function openProcess() {
   inquirer.prompt(
