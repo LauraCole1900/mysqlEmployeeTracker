@@ -21,7 +21,7 @@ function openProcess() {
         break
       case "Add employee": addEmployee()
         break
-      case "Add role": addRole()
+      case "Add role": addRole() //works, almost right
         break
       case "Update employee role": updateRole()
         break
@@ -31,7 +31,7 @@ function openProcess() {
         break
       case "View employees by department": viewByDepartments() //works
         break
-      case "View employees by role": viewByRole()
+      case "View employees by role": viewByRole() //works
         break
       case "View roles": viewRoles() //works
         break
@@ -280,11 +280,24 @@ function viewAllEmployees() {
 };
 
 // Role functions
+// THIS WORKS, almost right: inquirer.prompt questions duplicated here and in getDepartmentId()
 async function addRole() {
   const deptNames = await getDeptNames();
   const roleQuestions = await getRoleQuestions(deptNames);
-  inquirer.prompt(roleQuestions).then(response => {
-    const deptId = getDepartmentId(roleQuestions.roleDept);
+  const deptId = await getDepartmentId(roleQuestions[2]);
+  inquirer.prompt(
+    [
+      {
+        type: "input",
+        message: "Name of role?",
+        name: "roleTitle"
+      },
+      {
+        type: "number",
+        message: "What is this role's salary?",
+        name: "roleSalary"
+      },
+    ]).then(response => {
     console.log("Creating a new role...\n");
     connection.query(
       "INSERT INTO role SET ?",
@@ -292,25 +305,12 @@ async function addRole() {
         title: response.roleTitle,
         salary: response.roleSalary,
         department_id: deptId
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log("Role added!\n");
+        openProcess();
       });
-    /* *****************************************************
-    I think the code you have below needs to go inside
-    the callback function of the query above. This part 
-    of the code is real tricky. Using some of the code I 
-    added above, see if you can make Promise-based functions 
-    that do additional queries for matching dept id with 
-    name, etc.
-    ******************************************************* */
-    // connection.query(
-    //   "SELECT department.name, department.id FROM department INNER JOIN role ON department.id = role.department_id WHERE ?; INSERT INTO role SET role.department_id = department.id",
-    //   {
-    //     department_id: response.roleDept
-    //   },
-    // function (err, res) {
-    //   if (err) throw err;
-    //   console.log(res.affectedRows + " department added!\n");
-    //   openProcess();
-    // }
   }).catch(function (err) {
     if (err) throw err;
   })
