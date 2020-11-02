@@ -23,7 +23,7 @@ function openProcess() {
         break
       case "Add role": addRole() //works
         break
-      case "Update employee role": updateRole()
+      case "Update employee role": updateRole() //works
         break
       case "View departments": viewDepartments() //works
         break
@@ -103,6 +103,20 @@ function getRoleId(questionObj) {
   });
 };
 
+function getManagerId(questionObj) {
+  return new Promise(function (resolve, reject) {
+    inquirer.prompt(questionObj).then(response => {
+      const mName = response.managerName.split(" ");
+      const fName = mName[0];
+      const lName = mName[1];
+      const queryStr = "SELECT id FROM employee WHERE ?";
+      connection.query(queryStr, { first_name: fName, last_name: lName }, function (err, data) {
+        resolve(data[0].id)
+      })
+    });
+  });
+};
+
 // Inserts the department names array and returns all the role questions
 function getRoleQuestions(deptNames) {
   return [
@@ -167,8 +181,8 @@ function getDepartmentQuestion(deptNames) {
 function getRoleNameQuestion(roleNames) {
   return {
     type: "list",
-    message: "Which role?",
-    name: "jobList",
+    message: "New role?",
+    name: "jobTitle",
     choices: roleNames
   }
 };
@@ -245,6 +259,8 @@ async function addEmployee() {
   const roleNames = await getRoleNames();
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
   const roleId = await getRoleId(employeeQuestions[2]);
+  // const managerId = getManagerId(employeeQuestions[3]);
+  // console.log(managerId);
   inquirer.prompt(employeeQuestions).then(response => {
     console.log("Adding employee...\n");
     connection.query(
@@ -253,7 +269,7 @@ async function addEmployee() {
         first_name: response.firstName,
         last_name: response.lastName,
         role_id: roleId,
-        // manager_id: 
+        // manager_id: managerId
       },
       function (err, res) {
         if (err) throw err;
@@ -295,28 +311,30 @@ async function addRole() {
         name: "roleSalary"
       },
     ]).then(response => {
-    console.log("Creating a new role...\n");
-    connection.query(
-      "INSERT INTO role SET ?",
-      {
-        title: response.roleTitle,
-        salary: response.roleSalary,
-        department_id: deptId
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.log("Role added!\n");
-        openProcess();
-      });
-  }).catch(function (err) {
-    if (err) throw err;
-  })
+      console.log("Creating a new role...\n");
+      connection.query(
+        "INSERT INTO role SET ?",
+        {
+          title: response.roleTitle,
+          salary: response.roleSalary,
+          department_id: deptId
+        },
+        function (err, res) {
+          if (err) throw err;
+          console.log("Role added!\n");
+          openProcess();
+        });
+    }).catch(function (err) {
+      if (err) throw err;
+    })
 };
 
+// THIS WORKS
 async function updateRole() {
   const employeeNames = await getEmployeeNames();
   const roleNames = await getRoleNames();
-  const roleId = await getRoleId();
+  const roleQuestion = await getRoleNameQuestion(roleNames);
+  const roleId = await getRoleId(roleQuestion);
   inquirer.prompt(
     [
       {
@@ -325,34 +343,32 @@ async function updateRole() {
         name: "employeeChoice",
         choices: employeeNames
       },
-      {
-        type: "list",
-        message: "New role?",
-        name: "newRole",
-        choices: roleNames
-      }
-    ])
-    await getRoleId(response).then(response => {
-    console.log("Updating role...\n");
-    connection.query(
-      "UPDATE employee SET ? WHERE ? AND ?",
-      [
-        {
-          role_id: roleId
-        },
-        {
-          first_name: response.firstName,
-          last_name: response.lastName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log(res.affectedRows + " employee role updated!\n");
-        openProcess();
-      })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
+    ]).then(response => {
+      console.log("Updating role...\n");
+      const eName = response.employeeChoice.split(" ");
+      const fName = eName[0];
+      const lName = eName[1];
+      connection.query(
+        "UPDATE employee SET ? WHERE ? AND ?",
+        [
+          {
+            role_id: roleId
+          },
+          {
+            first_name: fName
+          },
+          {
+            last_name: lName
+          }
+        ],
+        function (err, res) {
+          if (err) throw err;
+          console.log(res.affectedRows + " employee role updated!\n");
+          openProcess();
+        })
+    }).catch(function (err) {
+      if (err) throw err;
+    })
 };
 
 // THIS WORKS
@@ -363,7 +379,7 @@ async function viewByRole() {
     console.log("Selecting all employees by role...\n");
     connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
       {
-        title: response.jobList
+        title: response.jobTitle
       },
       function (err, result) {
         if (err) throw err;
