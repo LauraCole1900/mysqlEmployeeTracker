@@ -45,6 +45,8 @@ function openProcess() {
   })
 };
 
+// Gary gave me the "new Promise"/ "await" logic & syntax
+
 // Creates list of departments
 function getDeptNames() {
   return new Promise(function (resolve, reject) {
