@@ -1,51 +1,71 @@
 # MySQL Employee Management System
 
-  ## Table of Contents
+## Table of Contents
 
-  * [Description](#description)
-  * [Installation](#installation)
-  * [Usage](#usage)
-  * [Technologies Used](#technologies)
-  * [Tests](#tests)
-  * [Credits](#credits)
-  * [Contributing](#contributing)
-  * [Questions](#questions)
-  * [License](#license)
+* [Description](#description)
+* [Installation](#installation)
+* [Usage](#usage)
+* [Technologies Used](#technologies)
+* [Tests](#tests)
+* [Credits](#credits)
+* [Contributing](#contributing)
+* [Questions](#questions)
+* [License](#license)
 
-  ## Description
+## Description
 
-  This is a CLI employee management system application using Inquirer.js and MySQL. This system allows the user to add employees, departments, and roles; view employees (all, by department, and by role), departments, and roles; update employee roles; and delete employees. After drilling down into the containing folder, the user should run "npm install", then open the process by entering "node server.js", at which point the application will ask the user to select a function, then walk the user through prompts to execute the selected function.
+This is a CLI employee management system application using Inquirer.js and MySQL. This system allows the user to add employees, departments, and roles; view employees (all, by department, and by role), departments, and roles; update employee roles; and delete employees. After drilling down into the containing folder, the user should run "npm install", then open the process by entering "node server.js", at which point the application will ask the user to select a function, then walk the user through prompts to execute the selected function.
 
-  [Link to walkthrough video](https://drive.google.com/file/d/1trfQepE9S5_PLLaUJ60OaK6sTjLwK_Eg/view)
+[Link to walkthrough video](https://drive.google.com/file/d/1trfQepE9S5_PLLaUJ60OaK6sTjLwK_Eg/view)
 
-  ## Installation Instructions
+## Installation Instructions
 
-  npm install
+If you want to run a copy of this app on your local machine, first clone the repository:
 
-  ## Usage
+HTTPS:
+```
+$ git clone https://github.com/LauraCole1900/expressNoteTaker.git
+```
 
-  This application is intended to be used to track employees, departments, and roles for an organization.
+SSH:
+```
+$ git clone git@github.com:LauraCole1900/expressNoteTaker.git
+```
 
-  ## Technologies Used
+Then cd into the cloned directory and download the dependencies by typing into the command line
+```
+$ npm install --save
+```
 
-  Node.js, Express, MySQL
+Once the dependencies are installed, start the application by typing into the command line
+```
+$ node server.js
+```
 
-  ## Tests
+## Usage
 
-  npm run test
+This application is intended to be used to track employees, departments, and roles for an organization.
 
-  ## Credits
+## Technologies Used
 
-  N/A
+Node.js, Inquirer, Express, MySQL
 
-  ## Contributing
+## Tests
 
-  N/A
+npm run test
 
-  ## Questions
+## Credits
 
-  If you have further questions, you can reach me at lauracole1900@comcast.net. For more of my work, see [my GitHub](https://github.com/LauraCole1900).
+N/A
 
-  ## License
+## Contributing
 
-  ![License badge](https://img.shields.io/badge/license-MIT-brightgreen).
+We believe code is never finished, welcome your contributions to enhance the applications functionality. Please adhere to the Code of Conduct for the Contributor Covenant, version 2.0, at https://www.contributor-covenant.org/version/2/0/code_of_conduct.html.
+
+## Questions
+
+If you have further questions, you can reach me at lauracole1900@comcast.net. For more of my work, see [my GitHub](https://github.com/LauraCole1900).
+
+## License
+
+![License badge](https://img.shields.io/badge/license-MIT-brightgreen).
