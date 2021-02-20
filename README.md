@@ -24,12 +24,12 @@ If you want to run a copy of this app on your local machine, first clone the rep
 
 HTTPS:
 ```
-$ git clone https://github.com/LauraCole1900/expressNoteTaker.git
+$ git clone https://github.com/LauraCole1900/mysqlEmployeeTracker.git
 ```
 
 SSH:
 ```
-$ git clone git@github.com:LauraCole1900/expressNoteTaker.git
+$ git clone git@github.com:LauraCole1900/mysqlEmployeeTracker.git
 ```
 
 Then cd into the cloned directory and download the dependencies by typing into the command line
