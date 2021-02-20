@@ -20,7 +20,17 @@ This is a CLI employee management system application using Inquirer.js and MySQL
 
 ## Installation Instructions
 
-If you want to run a copy of this app on your local machine, first clone the repository:
+If you want to run a copy of this app on your local machine, you will need to install MySQL Workbench from the MySQL website here:
+```
+https://dev.mysql.com/downloads/mysql/
+```
+
+You will need to configure MySQL Workbench before using it. Instructions can be found here:
+```
+https://dev.mysql.com/doc/workbench/en/wb-mysql-connections.html
+```
+
+Then, clone the repository:
 
 HTTPS:
 ```
@@ -32,19 +42,9 @@ SSH:
 $ git clone git@github.com:LauraCole1900/mysqlEmployeeTracker.git
 ```
 
-Then cd into the cloned directory and download the dependencies by typing into the command line
+Then cd/ into the cloned directory and download the dependencies by typing into the command line
 ```
 $ npm install --save
-```
-
-You will also need to download MySQL Workbench from the MySQL website here:
-```
-https://dev.mysql.com/downloads/mysql/
-```
-
-You will need to configure MySQL Workbench before using it. Instructions can be found here:
-```
-https://dev.mysql.com/doc/workbench/en/wb-mysql-connections.html
 ```
 
 Once the dependencies and MySQL Workbench are installed and MySQL Workbench is configured, start the application by typing into the command line
