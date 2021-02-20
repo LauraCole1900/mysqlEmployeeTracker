@@ -48,7 +48,7 @@ This application is intended to be used to track employees, departments, and rol
 
 ## Technologies Used
 
-Node.js, Inquirer, Express, MySQL
+Node.js, Inquirer, Express, MySQL, console.table npm package
 
 ## Tests
 
