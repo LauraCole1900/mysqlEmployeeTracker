@@ -47,43 +47,28 @@ function openProcess() {
 
 // Gary gave me the "new Promise"/ "await" logic & syntax
 
-// Creates list of departments
-function getDeptNames() {
+// Creates list of department, employee, manager, or role names
+function getNames(queryStr, nameType) {
   return new Promise(function (resolve, reject) {
-    connection.query("SELECT name FROM department", function (err, res) {
-      const names = res.map(obj => obj.name);
-      resolve(names);
-    })
-  });
-};
-
-// Creates list of employees
-function getEmployeeNames() {
-  return new Promise(function (resolve, reject) {
-    const queryStr = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+    let objArr;
     connection.query(queryStr, function (err, res) {
-      const names = res.map(obj => obj.employee_name);
-      resolve(names);
-    })
-  })
-}
-
-// Creates list of managers
-function getManagerNames() {
-  return new Promise(function (resolve, reject) {
-    const queryStr = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
-    connection.query(queryStr, function (err, res) {
-      const names = res.map(obj => obj.manager_name);
-      resolve(names);
-    })
-  });
-};
-
-// Creates list of roles
-function getRoleNames() {
-  return new Promise(function (resolve, reject) {
-    connection.query("SELECT id, title FROM role", function (err, res) {
-      const names = res.map(obj => obj.title);
+      const names = res.map(obj => {
+        switch (nameType) {
+          case "dept":
+            objArr = obj.name;
+            break;
+          case "manager":
+            objArr = obj.manager_name;
+            break;
+          case "role":
+            objArr = obj.title;
+            break;
+          default:
+            objArr = obj.employee_name;
+        }
+        console.log("objArr", objArr);
+        return objArr;
+      });
       resolve(names);
     })
   });
@@ -227,8 +212,11 @@ async function addDepartment() {
 
 
 async function viewByDepartments() {
-  const deptNames = await getDeptNames();
+  const deptQuery = "SELECT name FROM department";
+  const deptNames = await getNames(deptQuery, "dept");
+  console.log("deptNames", deptNames);
   const deptListQ = await getDepartmentQuestion(deptNames);
+  console.log("deptListQ", deptListQ);
   inquirer.prompt(deptListQ).then(response => {
     console.log(response);
     console.log("Selecting employees by department...\n");
@@ -250,8 +238,10 @@ async function viewByDepartments() {
 
 // Employee functions
 async function addEmployee() {
-  const managerNames = await getManagerNames();
-  const roleNames = await getRoleNames();
+  const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
+  const roleQuery = "SELECT id, title FROM role";
+  const managerNames = await getNames(manQuery, "manager");
+  const roleNames = await getNames(roleQuery, "role");
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
   const roleId = await getRoleId(employeeQuestions[0]);
   const managerId = await getManagerId(employeeQuestions[1]);
@@ -288,7 +278,8 @@ async function addEmployee() {
 
 
 async function deleteEmployee() {
-  const employeeNames = await getEmployeeNames();
+  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+  const employeeNames = await getNames(empQuery, "employee");
   const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
   inquirer.prompt(employeeQuestion).then(response => {
     const eName = response.employeeChoice.split(" ");
@@ -329,7 +320,8 @@ function viewAllEmployees() {
 
 // Role functions
 async function addRole() {
-  const deptNames = await getDeptNames();
+  const deptQuery = "SELECT name FROM department";
+  const deptNames = await getNames(deptQuery, "dept");
   const roleQuestion = await getRoleDeptQuestion(deptNames);
   const deptId = await getDepartmentId(roleQuestion);
   inquirer.prompt(
@@ -365,8 +357,10 @@ async function addRole() {
 
 
 async function updateRole() {
-  const employeeNames = await getEmployeeNames();
-  const roleNames = await getRoleNames();
+  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+  const roleQuery = "SELECT id, title FROM role";
+  const employeeNames = await getNames(empQuery, "employee");
+  const roleNames = await getNames(roleQuery, "role");
   const roleQuestion = await getRoleNameQuestion(roleNames);
   const roleId = await getRoleId(roleQuestion);
   inquirer.prompt(
@@ -407,7 +401,8 @@ async function updateRole() {
 
 
 async function viewByRole() {
-  const roleNames = await getRoleNames();
+  const roleQuery = "SELECT id, title FROM role";
+  const roleNames = await getNames(roleQuery, "role");
   const roleQuestion = await getRoleNameQuestion(roleNames);
   inquirer.prompt(roleQuestion).then(response => {
     console.log("Selecting all employees by role...\n");
