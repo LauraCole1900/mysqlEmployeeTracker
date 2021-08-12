@@ -26,15 +26,15 @@ function openProcess() {
         break
       case "Delete employee": deleteEmployee()
         break
-      case "Update employee role": updateRole()
+      case "Update employee role": updateEmployeeRole()
         break
       case "View departments": viewAll("department", "*")
         break
       case "View all employees": viewAll("employee", "*")
         break
-      case "View employees by department": viewByDepartments()
+      case "View employees by department": viewBy("department", "name", "SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?", getDepartmentQuestion)
         break
-      case "View employees by role": viewByRole()
+      case "View employees by role": viewBy("role", "id, title", "SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?", getRoleNameQuestion)
         break
       case "View roles": viewAll("role", "id, title")
         break
@@ -45,7 +45,7 @@ function openProcess() {
   })
 };
 
-// Gary gave me the "new Promise"/ "await" logic & syntax
+// Gary gave me the "new Promise"/"await" logic & syntax
 
 // Creates list of department, employee, manager, or role names
 function getNames(queryStr, nameType) {
@@ -54,7 +54,7 @@ function getNames(queryStr, nameType) {
     connection.query(queryStr, function (err, res) {
       const names = res.map(obj => {
         switch (nameType) {
-          case "dept":
+          case "department":
             objArr = obj.name;
             break;
           case "manager":
@@ -66,7 +66,6 @@ function getNames(queryStr, nameType) {
           default:
             objArr = obj.employee_name;
         }
-        console.log("objArr", objArr);
         return objArr;
       });
       resolve(names);
@@ -111,6 +110,34 @@ function viewAll(table, col) {
     })
 };
 
+// Views employees by department or role
+async function viewBy(table, col, connQuery, qFunction) {
+  let resObj;
+  const deptQuery = `SELECT ${col} FROM ${table}`;
+  const deptNames = await getNames(deptQuery, table);
+  const deptListQ = await qFunction(deptNames);
+  inquirer.prompt(deptListQ).then(response => {
+    switch (table) {
+      case "department":
+        resObj = { name: response.chosenDept };
+        break;
+      case "role":
+        resObj = { title: response.jobTitle };
+        break;
+      default:
+        return null;
+    }
+    console.log(`Selecting all employees by ${table}...\n`);
+    connection.query(connQuery, resObj,
+      function (err, res) {
+        if (err) throw err;
+        console.table(res);
+        openProcess();
+      })
+  }).catch(function (err) {
+    if (err) throw err;
+  })
+};
 
 // Inserts the department names array into answer choices and returns relevant role question
 function getRoleDeptQuestion(deptNames) {
@@ -173,7 +200,7 @@ function getEmployeeNameQuestion(employeeNames) {
 };
 
 // ==========================================================
-// Department functions
+// 'Add' functions
 
 async function addDepartment() {
   const deptQuestion = {
@@ -199,31 +226,6 @@ async function addDepartment() {
   })
 };
 
-async function viewByDepartments() {
-  const deptQuery = "SELECT name FROM department";
-  const deptNames = await getNames(deptQuery, "dept");
-  console.log("deptNames", deptNames);
-  const deptListQ = await getDepartmentQuestion(deptNames);
-  console.log("deptListQ", deptListQ);
-  inquirer.prompt(deptListQ).then(response => {
-    console.log(response);
-    console.log("Selecting employees by department...\n");
-    connection.query("SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?",
-      {
-        name: response.chosenDept
-      },
-      function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        openProcess();
-      })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// Employee functions
 async function addEmployee() {
   const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
   const roleQuery = "SELECT id, title FROM role";
@@ -263,39 +265,9 @@ async function addEmployee() {
   })
 };
 
-async function deleteEmployee() {
-  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-  const employeeNames = await getNames(empQuery, "employee");
-  const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
-  inquirer.prompt(employeeQuestion).then(response => {
-    const eName = response.employeeChoice.split(" ");
-    const fName = eName[0];
-    const lName = eName[1];
-    connection.query(
-      "DELETE FROM employee WHERE ? AND ?",
-      [
-        {
-          first_name: fName
-        },
-        {
-          last_name: lName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log("Employee deleted!\n");
-        openProcess();
-      });
-  }).catch(function (err) {
-    if (err) throw err;
-  });
-};
-
-
-// Role functions
 async function addRole() {
   const deptQuery = "SELECT name FROM department";
-  const deptNames = await getNames(deptQuery, "dept");
+  const deptNames = await getNames(deptQuery, "department");
   const roleQuestion = await getRoleDeptQuestion(deptNames);
   const deptId = await getId(roleQuestion, "department");
   inquirer.prompt(
@@ -329,7 +301,41 @@ async function addRole() {
     })
 };
 
-async function updateRole() {
+
+// 'Delete' functions
+
+async function deleteEmployee() {
+  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+  const employeeNames = await getNames(empQuery, "employee");
+  const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
+  inquirer.prompt(employeeQuestion).then(response => {
+    const eName = response.employeeChoice.split(" ");
+    const fName = eName[0];
+    const lName = eName[1];
+    connection.query(
+      "DELETE FROM employee WHERE ? AND ?",
+      [
+        {
+          first_name: fName
+        },
+        {
+          last_name: lName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log("Employee deleted!\n");
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  });
+};
+
+
+// 'Update' functions
+
+async function updateEmployeeRole() {
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
   const roleQuery = "SELECT id, title FROM role";
   const employeeNames = await getNames(empQuery, "employee");
@@ -371,37 +377,6 @@ async function updateRole() {
       if (err) throw err;
     })
 };
-
-async function viewByRole() {
-  const roleQuery = "SELECT id, title FROM role";
-  const roleNames = await getNames(roleQuery, "role");
-  const roleQuestion = await getRoleNameQuestion(roleNames);
-  inquirer.prompt(roleQuestion).then(response => {
-    console.log("Selecting all employees by role...\n");
-    connection.query("SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?",
-      {
-        title: response.jobTitle
-      },
-      function (err, result) {
-        if (err) throw err;
-        console.table(result);
-        openProcess();
-      })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
-
-
-// function viewRoles() {
-//   console.log("Selecting all roles...\n");
-//   connection.query(
-//     "SELECT id, title FROM role", function (err, res) {
-//       if (err) throw err;
-//       console.table(res);
-//       openProcess();
-//     })
-// };
 
 
 // BEGIN
