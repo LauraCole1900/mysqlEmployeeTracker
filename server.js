@@ -110,13 +110,14 @@ function viewAll(table, col) {
     })
 };
 
-// Views employees by department or role
+// Views employees by department or role given table and column names, connection query,
+// and function to get the appropriate questions
 async function viewBy(table, col, connQuery, qFunction) {
   let resObj;
-  const deptQuery = `SELECT ${col} FROM ${table}`;
-  const deptNames = await getNames(deptQuery, table);
-  const deptListQ = await qFunction(deptNames);
-  inquirer.prompt(deptListQ).then(response => {
+  const dataQuery = `SELECT ${col} FROM ${table}`;
+  const dataNames = await getNames(dataQuery, table);
+  const dataListQ = await qFunction(dataNames);
+  inquirer.prompt(dataListQ).then(response => {
     switch (table) {
       case "department":
         resObj = { name: response.chosenDept };
