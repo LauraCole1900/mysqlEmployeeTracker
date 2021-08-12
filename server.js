@@ -2,9 +2,6 @@ const inquirer = require("inquirer");
 require("console.table");
 const connection = require("./db/connection.js");
 
-let deptNames = [];
-let managerNames = [];
-
 
 // function to open the process
 function openProcess() {
@@ -99,48 +96,11 @@ function getId(questionObj, table) {
   });
 };
 
-// Views all given table and column names
-function viewAll(table, col) {
-  console.log(`Selecting all ${table}s...\n`);
-  connection.query(
-    `SELECT ${col} FROM ${table}`, function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      openProcess();
-    })
-};
 
-// Views employees by department or role given table and column names, connection query,
-// and function to get the appropriate questions
-async function viewBy(table, col, connQuery, qFunction) {
-  let resObj;
-  const dataQuery = `SELECT ${col} FROM ${table}`;
-  const dataNames = await getNames(dataQuery, table);
-  const dataListQ = await qFunction(dataNames);
-  inquirer.prompt(dataListQ).then(response => {
-    switch (table) {
-      case "department":
-        resObj = { name: response.chosenDept };
-        break;
-      case "role":
-        resObj = { title: response.jobTitle };
-        break;
-      default:
-        return null;
-    }
-    console.log(`Selecting all employees by ${table}...\n`);
-    connection.query(connQuery, resObj,
-      function (err, res) {
-        if (err) throw err;
-        console.table(res);
-        openProcess();
-      })
-  }).catch(function (err) {
-    if (err) throw err;
-  })
-};
+// ==========================================================
+// Functions to populate choices array(s) and return relevant question object(s)
 
-// Inserts the department names array into answer choices and returns relevant role question
+// Role questions
 function getRoleDeptQuestion(deptNames) {
   return [
     {
@@ -152,7 +112,17 @@ function getRoleDeptQuestion(deptNames) {
   ]
 };
 
-// Inserts the manager and role names arrays into answer choices and returns relevant employee questions
+function getRoleNameQuestion(roleNames) {
+  return {
+    type: "list",
+    message: "New role?",
+    name: "jobTitle",
+    choices: roleNames
+  }
+};
+
+
+// Employee questions
 function getEmployeeQuestions(managerNames, roleNames) {
   return [
     {
@@ -170,27 +140,6 @@ function getEmployeeQuestions(managerNames, roleNames) {
   ];
 };
 
-// Inserts the department names array into answer choices and returns the dept question
-function getDepartmentQuestion(deptNames) {
-  return {
-    type: "list",
-    message: "Which department?",
-    name: "chosenDept",
-    choices: deptNames
-  };
-};
-
-// Inserts the role names array into answer choices and returns the role question
-function getRoleNameQuestion(roleNames) {
-  return {
-    type: "list",
-    message: "New role?",
-    name: "jobTitle",
-    choices: roleNames
-  }
-};
-
-// Inserts the employee names array into answer choices and returns the employee question
 function getEmployeeNameQuestion(employeeNames) {
   return {
     type: "list",
@@ -200,8 +149,21 @@ function getEmployeeNameQuestion(employeeNames) {
   }
 };
 
+
+// Department question
+function getDepartmentQuestion(deptNames) {
+  return {
+    type: "list",
+    message: "Which department?",
+    name: "chosenDept",
+    choices: deptNames
+  };
+};
+
 // ==========================================================
-// 'Add' functions
+// CRUD functionality
+
+// Create functions
 
 async function addDepartment() {
   const deptQuestion = {
@@ -303,38 +265,51 @@ async function addRole() {
 };
 
 
-// 'Delete' functions
+// Read functions
 
-async function deleteEmployee() {
-  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-  const employeeNames = await getNames(empQuery, "employee");
-  const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
-  inquirer.prompt(employeeQuestion).then(response => {
-    const eName = response.employeeChoice.split(" ");
-    const fName = eName[0];
-    const lName = eName[1];
-    connection.query(
-      "DELETE FROM employee WHERE ? AND ?",
-      [
-        {
-          first_name: fName
-        },
-        {
-          last_name: lName
-        }
-      ],
+// Views all given table and column names
+function viewAll(table, col) {
+  console.log(`Selecting all ${table}s...\n`);
+  connection.query(
+    `SELECT ${col} FROM ${table}`, function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
+};
+
+// Views employees by department or role given table and column names, connection query,
+// and function to get the appropriate questions
+async function viewBy(table, col, connQuery, qFunction) {
+  let resObj;
+  const dataQuery = `SELECT ${col} FROM ${table}`;
+  const dataNames = await getNames(dataQuery, table);
+  const dataListQ = await qFunction(dataNames);
+  inquirer.prompt(dataListQ).then(response => {
+    switch (table) {
+      case "department":
+        resObj = { name: response.chosenDept };
+        break;
+      case "role":
+        resObj = { title: response.jobTitle };
+        break;
+      default:
+        return null;
+    }
+    console.log(`Selecting all employees by ${table}...\n`);
+    connection.query(connQuery, resObj,
       function (err, res) {
         if (err) throw err;
-        console.log("Employee deleted!\n");
+        console.table(res);
         openProcess();
-      });
+      })
   }).catch(function (err) {
     if (err) throw err;
-  });
+  })
 };
 
 
-// 'Update' functions
+// Update functions
 
 async function updateEmployeeRole() {
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
@@ -377,6 +352,37 @@ async function updateEmployeeRole() {
     }).catch(function (err) {
       if (err) throw err;
     })
+};
+
+
+// Delete functions
+
+async function deleteEmployee() {
+  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+  const employeeNames = await getNames(empQuery, "employee");
+  const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
+  inquirer.prompt(employeeQuestion).then(response => {
+    const eName = response.employeeChoice.split(" ");
+    const fName = eName[0];
+    const lName = eName[1];
+    connection.query(
+      "DELETE FROM employee WHERE ? AND ?",
+      [
+        {
+          first_name: fName
+        },
+        {
+          last_name: lName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log("Employee deleted!\n");
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  });
 };
 
 
