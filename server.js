@@ -28,15 +28,15 @@ function openProcess() {
         break
       case "Update employee role": updateRole()
         break
-      case "View departments": viewDepartments()
+      case "View departments": viewAll("department", "*")
         break
-      case "View all employees": viewAllEmployees()
+      case "View all employees": viewAll("employee", "*")
         break
       case "View employees by department": viewByDepartments()
         break
       case "View employees by role": viewByRole()
         break
-      case "View roles": viewRoles()
+      case "View roles": viewAll("role", "id, title")
         break
       default: process.exit();
     }
@@ -49,8 +49,8 @@ function openProcess() {
 
 // Creates list of department, employee, manager, or role names
 function getNames(queryStr, nameType) {
+  let objArr;
   return new Promise(function (resolve, reject) {
-    let objArr;
     connection.query(queryStr, function (err, res) {
       const names = res.map(obj => {
         switch (nameType) {
@@ -74,44 +74,43 @@ function getNames(queryStr, nameType) {
   });
 };
 
-// Resolves department_id for role table when given name of department
-function getDepartmentId(questionObj) {
+// Resolves ID for employee table when given name of department, role, or manager
+function getId(questionObj, table) {
+  let resolver;
   return new Promise(function (resolve, reject) {
     inquirer.prompt(questionObj).then(response => {
-      const queryStr = "SELECT id FROM department WHERE ?";
-      connection.query(queryStr, { name: response.roleDept }, function (err, data) {
+      const queryStr = `SELECT id FROM ${table} WHERE ?`;
+      switch (table) {
+        case "department":
+          resolver = { name: response.roleDept };
+          break;
+        case "role":
+          resolver = { title: response.jobTitle };
+          break;
+        default:
+          const mName = response.managerName.split(" ");
+          const fName = mName[0];
+          const lName = mName[1];
+          resolver = [{ first_name: fName }, { last_name: lName }]
+      }
+      connection.query(queryStr, resolver, function (err, data) {
         resolve(data[0].id)
       })
     });
   });
 };
 
-// Resolves role_id for employee table when given name of role
-function getRoleId(questionObj) {
-  return new Promise(function (resolve, reject) {
-    inquirer.prompt(questionObj).then(response => {
-      const queryStr = "SELECT id FROM role WHERE ?";
-      connection.query(queryStr, { title: response.jobTitle }, function (err, data) {
-        resolve(data[0].id)
-      })
-    });
-  });
+// Views all given table and column names
+function viewAll(table, col) {
+  console.log(`Selecting all ${table}s...\n`);
+  connection.query(
+    `SELECT ${col} FROM ${table}`, function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
 };
 
-// Resolves manager_id for employee table when given manager's name
-function getManagerId(questionObj) {
-  return new Promise(function (resolve, reject) {
-    inquirer.prompt(questionObj).then(response => {
-      const mName = response.managerName.split(" ");
-      const fName = mName[0];
-      const lName = mName[1];
-      const queryStr = "SELECT id FROM employee WHERE ?";
-      connection.query(queryStr, [{ first_name: fName }, { last_name: lName }], function (err, data) {
-        resolve(data[0].id)
-      })
-    });
-  });
-};
 
 // Inserts the department names array into answer choices and returns relevant role question
 function getRoleDeptQuestion(deptNames) {
@@ -175,16 +174,6 @@ function getEmployeeNameQuestion(employeeNames) {
 
 // ==========================================================
 // Department functions
-function viewDepartments() {
-  console.log("Selecting all departments...\n");
-  connection.query(
-    "SELECT * FROM department", function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      openProcess();
-    })
-};
-
 
 async function addDepartment() {
   const deptQuestion = {
@@ -210,7 +199,6 @@ async function addDepartment() {
   })
 };
 
-
 async function viewByDepartments() {
   const deptQuery = "SELECT name FROM department";
   const deptNames = await getNames(deptQuery, "dept");
@@ -235,7 +223,6 @@ async function viewByDepartments() {
 };
 
 
-
 // Employee functions
 async function addEmployee() {
   const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
@@ -243,8 +230,8 @@ async function addEmployee() {
   const managerNames = await getNames(manQuery, "manager");
   const roleNames = await getNames(roleQuery, "role");
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
-  const roleId = await getRoleId(employeeQuestions[0]);
-  const managerId = await getManagerId(employeeQuestions[1]);
+  const roleId = await getId(employeeQuestions[0], "role");
+  const managerId = await getId(employeeQuestions[1], "employee");
   inquirer.prompt([
     {
       type: "input",
@@ -276,7 +263,6 @@ async function addEmployee() {
   })
 };
 
-
 async function deleteEmployee() {
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
   const employeeNames = await getNames(empQuery, "employee");
@@ -306,24 +292,12 @@ async function deleteEmployee() {
 };
 
 
-function viewAllEmployees() {
-  console.log("Selecting all employees...\n");
-  connection.query(
-    "SELECT * FROM employee", function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      openProcess();
-    })
-};
-
-
-
 // Role functions
 async function addRole() {
   const deptQuery = "SELECT name FROM department";
   const deptNames = await getNames(deptQuery, "dept");
   const roleQuestion = await getRoleDeptQuestion(deptNames);
-  const deptId = await getDepartmentId(roleQuestion);
+  const deptId = await getId(roleQuestion, "department");
   inquirer.prompt(
     [
       {
@@ -355,14 +329,13 @@ async function addRole() {
     })
 };
 
-
 async function updateRole() {
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
   const roleQuery = "SELECT id, title FROM role";
   const employeeNames = await getNames(empQuery, "employee");
   const roleNames = await getNames(roleQuery, "role");
   const roleQuestion = await getRoleNameQuestion(roleNames);
-  const roleId = await getRoleId(roleQuestion);
+  const roleId = await getId(roleQuestion, "role");
   inquirer.prompt(
     [
       {
@@ -399,7 +372,6 @@ async function updateRole() {
     })
 };
 
-
 async function viewByRole() {
   const roleQuery = "SELECT id, title FROM role";
   const roleNames = await getNames(roleQuery, "role");
@@ -421,15 +393,15 @@ async function viewByRole() {
 };
 
 
-function viewRoles() {
-  console.log("Selecting all roles...\n");
-  connection.query(
-    "SELECT id, title FROM role", function (err, res) {
-      if (err) throw err;
-      console.table(res);
-      openProcess();
-    })
-};
+// function viewRoles() {
+//   console.log("Selecting all roles...\n");
+//   connection.query(
+//     "SELECT id, title FROM role", function (err, res) {
+//       if (err) throw err;
+//       console.table(res);
+//       openProcess();
+//     })
+// };
 
 
 // BEGIN
