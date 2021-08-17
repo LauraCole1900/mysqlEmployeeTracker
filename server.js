@@ -312,13 +312,7 @@ async function viewBy(table, col, connQuery, qFunction) {
   })
 };
 
-
 // View employees by manager
-// Get manager names
-// const managerNames = await getNames(manQuery, "manager");
-// Get manager ID
-// const managerId = await getId(employeeQuestions[1], "employee");
-// Select name from employee where manager_id: managerId
 async function viewByManager() {
   const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
   const managerNames = await getNames(manQuery, "manager");
