@@ -10,7 +10,7 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "Done"]
     }
   ).then(function (response) {
     console.log(response)
@@ -32,6 +32,8 @@ function openProcess() {
       case "View all employees": viewAll("employee", "*");
         break;
       case "View employees by department": viewBy("department", "name", "SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?", getDepartmentQuestion);
+        break;
+      case "View employees by manager": viewByManager();
         break;
       case "View employees by role": viewBy("role", "id, title", "SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?", getRoleNameQuestion);
         break;
@@ -310,12 +312,32 @@ async function viewBy(table, col, connQuery, qFunction) {
   })
 };
 
+
 // View employees by manager
 // Get manager names
 // const managerNames = await getNames(manQuery, "manager");
 // Get manager ID
 // const managerId = await getId(employeeQuestions[1], "employee");
 // Select name from employee where manager_id: managerId
+async function viewByManager() {
+  const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
+  const managerNames = await getNames(manQuery, "manager");
+  const employeeQuestions = await getEmployeeQuestions(managerNames, ["roles"]);
+  const managerId = await getId(employeeQuestions[1], "employee");
+  console.log(`Selecting all employees by manager...\n`);
+  connection.query("SELECT employee.first_name, employee.last_name FROM employee WHERE ?",
+    {
+      manager_id: managerId
+    },
+    function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
+    .catch(function (err) {
+      if (err) throw err;
+    })
+}
 
 
 // View department budget
@@ -448,7 +470,10 @@ async function deleteEmployee() {
 };
 
 // Delete role
-// Needs to check that there are no employees in that role, then delete role
+// List roles
+// Check that there are no employees in that role, then delete role
+// If employees in role, prompt to delete employee(s) or switch employee(s) to new role
+// If not, delete role
 
 // Delete department
 // Check that there are no employees in that department
