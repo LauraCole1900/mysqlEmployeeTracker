@@ -308,6 +308,23 @@ async function viewBy(table, col, connQuery, qFunction) {
   })
 };
 
+// View employees by manager
+// Get manager names
+// const managerNames = await getNames(manQuery, "manager");
+// Get manager ID
+// const managerId = await getId(employeeQuestions[1], "employee");
+// Select name from employee where manager_id: managerId
+
+
+// View department budget
+// List departments
+// Get roles associated with that department
+// Get number of rows in employee table for each role associated with selected department
+// Multiply n rows by that role's salary in the role table
+// Repeat for each role in department
+// Add products
+// Print sum to page
+
 
 // Update functions
 
@@ -354,6 +371,13 @@ async function updateEmployeeRole() {
     })
 };
 
+// Update employee manager
+// Select current employee from list
+// const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+// const employeeNames = await getNames(empQuery, "employee");
+// Select new manager
+// Hell, just take the 'update role' function and update that
+
 
 // Delete functions
 
@@ -384,6 +408,13 @@ async function deleteEmployee() {
     if (err) throw err;
   });
 };
+
+// Delete role
+// Needs to check that there are no employees in that role, then delete role
+
+// Delete department
+// Check that there are no employees in that department
+// On delete, cascade for roles
 
 
 // BEGIN
