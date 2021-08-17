@@ -363,7 +363,7 @@ async function updateEmployeeRole() {
         ],
         function (err, res) {
           if (err) throw err;
-          console.log(res.affectedRows + " employee role updated!\n");
+          console.log(`${res.affectedRows} employee role(s) updated!\n`);
           openProcess();
         })
     }).catch(function (err) {
