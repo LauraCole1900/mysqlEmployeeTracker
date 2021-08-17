@@ -10,31 +10,33 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by role", "View roles", "Done"]
     }
   ).then(function (response) {
     console.log(response)
     switch (response.action) {
-      case "Add department": addDepartment()
-        break
-      case "Add employee": addEmployee()
-        break
-      case "Add role": addRole()
-        break
-      case "Delete employee": deleteEmployee()
-        break
-      case "Update employee role": updateEmployeeRole()
-        break
-      case "View departments": viewAll("department", "*")
-        break
-      case "View all employees": viewAll("employee", "*")
-        break
-      case "View employees by department": viewBy("department", "name", "SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?", getDepartmentQuestion)
-        break
-      case "View employees by role": viewBy("role", "id, title", "SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?", getRoleNameQuestion)
-        break
-      case "View roles": viewAll("role", "id, title")
-        break
+      case "Add department": addDepartment();
+        break;
+      case "Add employee": addEmployee();
+        break;
+      case "Add role": addRole();
+        break;
+      case "Delete employee": deleteEmployee();
+        break;
+      case "Update employee manager": updateEmployeeManager();
+        break;
+      case "Update employee role": updateEmployeeRole();
+        break;
+      case "View departments": viewAll("department", "*");
+        break;
+      case "View all employees": viewAll("employee", "*");
+        break;
+      case "View employees by department": viewBy("department", "name", "SELECT department.id, department.name, role.id, role.title, role.department_id, employee.first_name, employee.last_name, employee.role_id FROM department INNER JOIN role ON department.id = role.department_id INNER JOIN employee ON role.id = employee.role_id WHERE ?", getDepartmentQuestion);
+        break;
+      case "View employees by role": viewBy("role", "id, title", "SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?", getRoleNameQuestion);
+        break;
+      case "View roles": viewAll("role", "id, title");
+        break;
       default: process.exit();
     }
   }).catch(function (err) {
@@ -363,7 +365,7 @@ async function updateEmployeeRole() {
         ],
         function (err, res) {
           if (err) throw err;
-          console.log(`${res.affectedRows} employee role(s) updated!\n`);
+          console.log(`${res.affectedRows} employee's role updated!\n`);
           openProcess();
         })
     }).catch(function (err) {
@@ -371,12 +373,48 @@ async function updateEmployeeRole() {
     })
 };
 
-// Update employee manager
-// Select current employee from list
-// const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-// const employeeNames = await getNames(empQuery, "employee");
-// Select new manager
-// Hell, just take the 'update role' function and update that
+async function updateEmployeeManager() {
+  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
+  const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
+  const employeeNames = await getNames(empQuery, "employee");
+  const managerNames = await getNames(manQuery, "manager");
+  const employeeQuestions = await getEmployeeQuestions(managerNames, ["roles"]);
+  const managerId = await getId(employeeQuestions[1], "employee");
+  inquirer.prompt(
+    [
+      {
+        type: "list",
+        message: "Which employee?",
+        name: "employeeChoice",
+        choices: employeeNames
+      },
+    ]).then(response => {
+      console.log("Updating manager...\n");
+      const eName = response.employeeChoice.split(" ");
+      const fName = eName[0];
+      const lName = eName[1];
+      connection.query(
+        "UPDATE employee SET ? WHERE ? AND ?",
+        [
+          {
+            manager_id: managerId
+          },
+          {
+            first_name: fName
+          },
+          {
+            last_name: lName
+          }
+        ],
+        function (err, res) {
+          if (err) throw err;
+          console.log(`${res.affectedRows} employee's manager updated!\n`);
+          openProcess();
+        })
+    }).catch(function (err) {
+      if (err) throw err;
+    })
+};
 
 
 // Delete functions
