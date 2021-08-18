@@ -23,9 +23,9 @@ function openProcess() {
         break;
       case "Delete employee": deleteEmployee();
         break;
-      case "Update employee manager": updateEmployeeManager();
+      case "Update employee manager": updateJobData("SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", "employee", "manager", getEmployeeQuestions);
         break;
-      case "Update employee role": updateEmployeeRole();
+      case "Update employee role": updateJobData("SELECT id, title FROM role", "role", "role", getRoleNameQuestion);
         break;
       case "View departments": viewAll("department", "*");
         break;
@@ -346,13 +346,30 @@ async function viewByManager() {
 
 // Update functions
 
-async function updateEmployeeRole() {
+async function updateJobData(dataQuery, table, cond, qFunction) {
+  let dataQuestion;
+  let dataId;
+  let resObj;
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-  const roleQuery = "SELECT id, title FROM role";
+  // const roleQuery = "SELECT id, title FROM role";
   const employeeNames = await getNames(empQuery, "employee");
-  const roleNames = await getNames(roleQuery, "role");
-  const roleQuestion = await getRoleNameQuestion(roleNames);
-  const roleId = await getId(roleQuestion, "role");
+  const dataNames = await getNames(dataQuery, cond);
+  switch (table) {
+    case "employee":
+      dataQuestion = await qFunction(dataNames, ["roles"]);
+      dataId = await getId(dataQuestion[1], table);
+      break;
+    default:
+      dataQuestion = await qFunction(dataNames);
+      dataId = await getId(dataQuestion, table);
+  }
+  switch (cond) {
+    case "role":
+      resObj = { role_id: dataId };
+      break;
+    default:
+      resObj = { manager_id: dataId }
+  }
   inquirer.prompt(
     [
       {
@@ -362,16 +379,14 @@ async function updateEmployeeRole() {
         choices: employeeNames
       },
     ]).then(response => {
-      console.log("Updating role...\n");
+      console.log(`Updating ${cond}...\n`);
       const eName = response.employeeChoice.split(" ");
       const fName = eName[0];
       const lName = eName[1];
       connection.query(
         "UPDATE employee SET ? WHERE ? AND ?",
         [
-          {
-            role_id: roleId
-          },
+          resObj,
           {
             first_name: fName
           },
@@ -381,7 +396,7 @@ async function updateEmployeeRole() {
         ],
         function (err, res) {
           if (err) throw err;
-          console.log(`${res.affectedRows} employee's role updated!\n`);
+          console.log(`${res.affectedRows} employee's ${cond} updated!\n`);
           openProcess();
         })
     }).catch(function (err) {
