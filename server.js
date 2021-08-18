@@ -331,7 +331,7 @@ async function viewByManager() {
     .catch(function (err) {
       if (err) throw err;
     })
-}
+};
 
 
 // View department budget
