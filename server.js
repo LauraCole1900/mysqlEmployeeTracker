@@ -316,7 +316,7 @@ async function viewBy(table, col, connQuery, qFunction) {
 async function viewByManager() {
   const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
   const managerNames = await getNames(manQuery, "manager");
-  const employeeQuestions = await getEmployeeQuestions(managerNames, ["roles"]);
+  const employeeQuestions = await getEmployeeQuestions(managerNames);
   const managerId = await getId(employeeQuestions[1], "employee");
   console.log(`Selecting all employees by manager...\n`);
   connection.query("SELECT employee.first_name, employee.last_name FROM employee WHERE ?",
@@ -344,23 +344,22 @@ async function viewByManager() {
 // Print sum to page
 
 
-// Update functions
+// Update function
 
+// Update employee manager or role given table and condition (manager or role) names,
+// query to get array of condition names, and function to get the appropriate questions
 async function updateJobData(dataQuery, table, cond, qFunction) {
-  let dataQuestion;
   let dataId;
   let resObj;
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-  // const roleQuery = "SELECT id, title FROM role";
   const employeeNames = await getNames(empQuery, "employee");
   const dataNames = await getNames(dataQuery, cond);
+  const dataQuestion = await qFunction(dataNames);
   switch (table) {
     case "employee":
-      dataQuestion = await qFunction(dataNames, ["roles"]);
       dataId = await getId(dataQuestion[1], table);
       break;
     default:
-      dataQuestion = await qFunction(dataNames);
       dataId = await getId(dataQuestion, table);
   }
   switch (cond) {
@@ -397,49 +396,6 @@ async function updateJobData(dataQuery, table, cond, qFunction) {
         function (err, res) {
           if (err) throw err;
           console.log(`${res.affectedRows} employee's ${cond} updated!\n`);
-          openProcess();
-        })
-    }).catch(function (err) {
-      if (err) throw err;
-    })
-};
-
-async function updateEmployeeManager() {
-  const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
-  const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
-  const employeeNames = await getNames(empQuery, "employee");
-  const managerNames = await getNames(manQuery, "manager");
-  const employeeQuestions = await getEmployeeQuestions(managerNames, ["roles"]);
-  const managerId = await getId(employeeQuestions[1], "employee");
-  inquirer.prompt(
-    [
-      {
-        type: "list",
-        message: "Which employee?",
-        name: "employeeChoice",
-        choices: employeeNames
-      },
-    ]).then(response => {
-      console.log("Updating manager...\n");
-      const eName = response.employeeChoice.split(" ");
-      const fName = eName[0];
-      const lName = eName[1];
-      connection.query(
-        "UPDATE employee SET ? WHERE ? AND ?",
-        [
-          {
-            manager_id: managerId
-          },
-          {
-            first_name: fName
-          },
-          {
-            last_name: lName
-          }
-        ],
-        function (err, res) {
-          if (err) throw err;
-          console.log(`${res.affectedRows} employee's manager updated!\n`);
           openProcess();
         })
     }).catch(function (err) {
