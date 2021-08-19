@@ -334,7 +334,7 @@ async function viewByManager() {
 };
 
 
-// View department budget
+// TODO: View department budget
 // List departments
 // Get roles associated with that department
 // Get number of rows in employee table for each role associated with selected department
@@ -434,13 +434,13 @@ async function deleteEmployee() {
   });
 };
 
-// Delete role
+// TODO: Delete role
 // List roles
 // Check that there are no employees in that role, then delete role
 // If employees in role, prompt to delete employee(s) or switch employee(s) to new role
 // If not, delete role
 
-// Delete department
+// TODO: Delete department
 // Check that there are no employees in that department
 // On delete, cascade for roles
 
