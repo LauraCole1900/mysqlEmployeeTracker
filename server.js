@@ -10,7 +10,7 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "View department budgets", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "View department budgets", "Done"]
     }
   ).then(function (response) {
     console.log(response)
@@ -21,7 +21,11 @@ function openProcess() {
         break;
       case "Add role": addRole();
         break;
+      case "Delete department": deleteDepartment();
+        break;
       case "Delete employee": deleteEmployee();
+        break;
+      case "Delete role": deleteRole();
         break;
       case "Update employee manager": updateJobData("SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL", "employee", "manager", getEmployeeQuestions);
         break;
@@ -121,7 +125,7 @@ function getRoleDeptQuestion(deptNames) {
 function getRoleNameQuestion(roleNames) {
   return {
     type: "list",
-    message: "New role?",
+    message: "Which role?",
     name: "jobTitle",
     choices: roleNames
   }
@@ -412,6 +416,7 @@ async function updateJobData(dataQuery, table, cond, qFunction) {
 
 // Delete functions
 
+// Delete employee by name
 async function deleteEmployee() {
   const empQuery = "SELECT CONCAT(first_name,' ',last_name) AS employee_name FROM employee";
   const employeeNames = await getNames(empQuery, "employee");
@@ -440,15 +445,48 @@ async function deleteEmployee() {
   });
 };
 
-// TODO: Delete role
-// List roles
-// Check that there are no employees in that role, then delete role
-// If employees in role, prompt to delete employee(s) or switch employee(s) to new role
-// If not, delete role
+// Delete role by ID
+// Checks whether there are employees in that role
+// If employees in role, prompts to delete employee(s) or reassign employee(s) to new role
+// If no employees in role, deletes role
+async function deleteRole() {
+  const roleQuery = "SELECT id, title FROM role";
+  const roleNames = await getNames(roleQuery, "role");
+  const roleQuestion = getRoleNameQuestion(roleNames);
+  const roleId = await getId(roleQuestion, "role");
+  console.log(roleId);
+  connection.query(`SELECT id FROM employee WHERE ?`,
+    {
+      role_id: roleId
+    },
+    function (err, res) {
+      if (err) throw err;
+      if (res.length > 0) {
+        console.log(`${res.length} employee(s) currently hold this role. Please delete or reassign these employees before deleting this role.`)
+        openProcess();
+      } else {
+        connection.query("DELETE FROM role WHERE ?",
+          {
+            id: roleId
+          },
+          function (err, res) {
+            if (err) throw err;
+            console.log("Role deleted!\n")
+            openProcess();
+          })
+          .catch(function (err) {
+            if (err) throw err;
+          })
+      }
+    })
+}
 
 // TODO: Delete department
 // Check that there are no employees in that department
 // On delete, cascade for roles
+async function deleteDepartment() {
+
+}
 
 
 // BEGIN
