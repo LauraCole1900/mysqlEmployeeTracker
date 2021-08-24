@@ -10,7 +10,7 @@ function openProcess() {
       type: "list",
       message: "What would you like to do?",
       name: "action",
-      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "Done"]
+      choices: ["Add department", "Add employee", "Add role", "Delete employee", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "View department budgets", "Done"]
     }
   ).then(function (response) {
     console.log(response)
@@ -38,6 +38,8 @@ function openProcess() {
       case "View employees by role": viewBy("role", "id, title", "SELECT role.id, role.title, employee.first_name, employee.last_name, employee.role_id FROM role INNER JOIN employee ON role.id = employee.role_id WHERE ?", getRoleNameQuestion);
         break;
       case "View roles": viewAll("role", "id, title");
+        break;
+      case "View department budgets": viewDeptBudget();
         break;
       default: process.exit();
     }
@@ -333,15 +335,19 @@ async function viewByManager() {
     })
 };
 
-
-// TODO: View department budget
-// List departments
-// Get roles associated with that department
-// Get number of rows in employee table for each role associated with selected department
-// Multiply n rows by that role's salary in the role table
-// Repeat for each role in department
-// Add products
-// Print sum to page
+// View department budgets
+async function viewDeptBudget() {
+  const budgetQuery = "SELECT department.id, department.name, SUM(role.salary) AS total_budget FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON role.department_id = department.id GROUP BY department.id, department.name";
+  connection.query(budgetQuery,
+    function (err, res) {
+      if (err) throw err;
+      console.table(res);
+      openProcess();
+    })
+    .catch(function (err) {
+      if (err) throw err;
+    })
+};
 
 
 // Update function
