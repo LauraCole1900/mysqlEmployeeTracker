@@ -446,16 +446,13 @@ async function deleteEmployee() {
 };
 
 // Delete role by ID
-// Checks whether there are employees in that role
-// If no employees in role, deletes role
-// If employees in role, confirms whether user wants to continue
-// If confirmed, deletes role and relevant employee(s)
 async function deleteRole() {
   const roleQuery = "SELECT id, title FROM role";
   const roleNames = await getNames(roleQuery, "role");
   const roleQuestion = getRoleNameQuestion(roleNames);
   const roleId = await getId(roleQuestion, "role");
   console.log(roleId);
+  // Checks whether there are employees in that role
   connection.query(`SELECT id FROM employee WHERE ?`,
     {
       role_id: roleId
@@ -463,6 +460,7 @@ async function deleteRole() {
     function (err, res) {
       if (err) throw err;
       switch (res.length) {
+        // If no employees in role, deletes role
         case 0:
           connection.query("DELETE FROM role WHERE ?",
             {
@@ -478,6 +476,7 @@ async function deleteRole() {
             })
           break;
         default:
+          // If employees in role, confirms whether user wants to continue
           inquirer.prompt({
             type: "list",
             message: `${res.length} employee(s) currently hold this role. If you delete this role, those employees will also be deleted. Continue?`,
@@ -489,11 +488,12 @@ async function deleteRole() {
               case "No":
                 openProcess();
                 break;
+              // If confirmed, deletes role and relevant employee(s)
               default:
                 connection.query(`DELETE role, employee FROM role INNER JOIN employee ON role.id = employee.role_id WHERE role.id = ${roleId}`,
                   function (err, res) {
                     if (err) throw err;
-                    console.log("Role deleted!\n")
+                    console.log("Role and employee(s) deleted!\n")
                     openProcess();
                   })
                   .catch(function (err) {
