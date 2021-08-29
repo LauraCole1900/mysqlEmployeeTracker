@@ -447,8 +447,9 @@ async function deleteEmployee() {
 
 // Delete role by ID
 // Checks whether there are employees in that role
-// If employees in role, prompts to delete employee(s) or reassign employee(s) to new role
 // If no employees in role, deletes role
+// If employees in role, confirms whether user wants to continue
+// If confirmed, deletes role and relevant employee(s)
 async function deleteRole() {
   const roleQuery = "SELECT id, title FROM role";
   const roleNames = await getNames(roleQuery, "role");
@@ -461,21 +462,44 @@ async function deleteRole() {
     },
     function (err, res) {
       if (err) throw err;
-      if (res.length > 0) {
-        console.log(`${res.length} employee(s) currently hold this role. Please delete or reassign these employees before deleting this role.`)
-        openProcess();
-      } else {
-        connection.query("DELETE FROM role WHERE ?",
-          {
-            id: roleId
-          },
-          function (err, res) {
-            if (err) throw err;
-            console.log("Role deleted!\n")
-            openProcess();
-          })
-          .catch(function (err) {
-            if (err) throw err;
+      switch (res.length) {
+        case 0:
+          connection.query("DELETE FROM role WHERE ?",
+            {
+              id: roleId
+            },
+            function (err, res) {
+              if (err) throw err;
+              console.log("Role deleted!\n")
+              openProcess();
+            })
+            .catch(function (err) {
+              if (err) throw err;
+            })
+          break;
+        default:
+          inquirer.prompt({
+            type: "list",
+            message: `${res.length} employee(s) currently hold this role. If you delete this role, those employees will also be deleted. Continue?`,
+            name: "roleConfirm",
+            choices: ["Yes", "No"]
+          }).then(function (res) {
+            console.log(res);
+            switch (res.roleConfirm) {
+              case "No":
+                openProcess();
+                break;
+              default:
+                connection.query(`DELETE role, employee FROM role INNER JOIN employee ON role.id = employee.role_id WHERE role.id = ${roleId}`,
+                  function (err, res) {
+                    if (err) throw err;
+                    console.log("Role deleted!\n")
+                    openProcess();
+                  })
+                  .catch(function (err) {
+                    if (err) throw err;
+                  })
+            }
           })
       }
     })
