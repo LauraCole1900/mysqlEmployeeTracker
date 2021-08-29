@@ -504,8 +504,7 @@ async function deleteRole() {
     })
 }
 
-// TODO: Delete department
-// Check that there are no employees in that department
+// Delete department
 // On delete, cascade for roles
 async function deleteDepartment() {
   const deptQuery = "SELECT name, id FROM department"
@@ -513,11 +512,77 @@ async function deleteDepartment() {
   const deptQuestion = getDepartmentQuestion(deptNames);
   const deptId = await getId(deptQuestion, "department")
   console.log(deptId);
+  // Checks whether there are any employees in that department
   cQuery = `SELECT employee.id, role.id FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.department_id = ${deptId}`
-  connection.query(cQuery, function(err, res) {
+  connection.query(cQuery, function (err, res) {
     if (err) throw err;
     console.log(res.length);
-    openProcess();
+    switch (res.length) {
+      // If not, confirms that user wants to delete department and associated role(s)
+      case 0:
+        inquirer.prompt({
+          type: "list",
+          message: "This action will also delete all roles in this department. Continue?",
+          name: "deptRoleConfirm",
+          choices: ["Yes", "No"]
+        }).then(function (res) {
+          console.log(res);
+          switch (res.deptRoleConfirm) {
+            case "No":
+              openProcess();
+              break;
+            // If confirmed, deletes department and associated role(s)
+            default:
+              // Checks whether there are roles in the department
+              connection.query(`SELECT id FROM role WHERE role.department_id = ${deptId}`,
+                function (err, res) {
+                  if (err) throw err;
+                  switch (res.length) {
+                    // If no roles, deletes department
+                    case 0:
+                      connection.query(`DELETE FROM department WHERE id = ${deptId}`,
+                        function (err, res) {
+                          if (err) throw err;
+                          console.log("Department and associated roles deleted!\n")
+                          openProcess();
+                        })
+                      break;
+                    // If yes roles, deletes department and roles
+                    default:
+                      connection.query(`DELETE department, role FROM department INNER JOIN role ON department.id = role.department_id WHERE department.id = ${deptId}`,
+                        function (err, res) {
+                          if (err) throw err;
+                          console.log("Department and associated roles deleted!\n")
+                          openProcess();
+                        })
+                        .catch(function (err) {
+                          if (err) throw err;
+                        })
+                  }
+                })
+          }
+        })
+        break;
+      // If there are employees in the department, confirms that user wants to delete department
+      // and associated role(s) and employee(s)
+      default:
+        inquirer.prompt({
+          type: "list",
+          message: `This action will also delete the ${res.length} employee(s) and any associated roles in this department. Continue?`,
+          name: "deptEmployeeConfirm",
+          choices: ["Yes", "No"]
+        }).then(function (res) {
+          console.log(res);
+          switch (res.deptEmployeeConfirm) {
+            case "No":
+              openProcess();
+              break;
+            // TODO: If confirmed, deletes department and associated role(s) and employee(s)
+            default:
+              openProcess();
+          }
+        })
+    }
   })
 }
 
