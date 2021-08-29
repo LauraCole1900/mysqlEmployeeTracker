@@ -482,14 +482,16 @@ async function deleteRole() {
             name: "roleConfirm",
             choices: ["Yes", "No"]
           }).then(function (res) {
-            console.log(res);
             switch (res.roleConfirm) {
               case "No":
                 openProcess();
                 break;
               // If confirmed, deletes role and relevant employee(s)
               default:
-                connection.query(`DELETE role, employee FROM role INNER JOIN employee ON role.id = employee.role_id WHERE role.id = ${roleId}`,
+                connection.query("DELETE FROM role WHERE ?",
+                  {
+                    id: roleId
+                  },
                   function (err, res) {
                     if (err) throw err;
                     console.log("Role and employee(s) deleted!\n")
