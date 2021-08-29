@@ -13,7 +13,7 @@ function openProcess() {
       choices: ["Add department", "Add employee", "Add role", "Delete department", "Delete employee", "Delete role", "Update employee manager", "Update employee role", "View departments", "View all employees", "View employees by department", "View employees by manager", "View employees by role", "View roles", "View department budgets", "Done"]
     }
   ).then(function (response) {
-    console.log(response)
+    console.log(response.action)
     switch (response.action) {
       case "Add department": addDepartment();
         break;
@@ -88,7 +88,7 @@ function getId(questionObj, table) {
       const queryStr = `SELECT id FROM ${table} WHERE ?`;
       switch (table) {
         case "department":
-          resolver = { name: response.roleDept };
+          resolver = { name: response.chosenDept };
           break;
         case "role":
           resolver = { title: response.jobTitle };
@@ -116,7 +116,7 @@ function getRoleDeptQuestion(deptNames) {
     {
       type: "list",
       message: "In which department is this role?",
-      name: "roleDept",
+      name: "chosenDept",
       choices: deptNames
     }
   ]
@@ -451,7 +451,6 @@ async function deleteRole() {
   const roleNames = await getNames(roleQuery, "role");
   const roleQuestion = getRoleNameQuestion(roleNames);
   const roleId = await getId(roleQuestion, "role");
-  console.log(roleId);
   // Checks whether there are employees in that role
   connection.query(`SELECT id FROM employee WHERE ?`,
     {
@@ -509,7 +508,17 @@ async function deleteRole() {
 // Check that there are no employees in that department
 // On delete, cascade for roles
 async function deleteDepartment() {
-
+  const deptQuery = "SELECT name, id FROM department"
+  const deptNames = await getNames(deptQuery, "department");
+  const deptQuestion = getDepartmentQuestion(deptNames);
+  const deptId = await getId(deptQuestion, "department")
+  console.log(deptId);
+  cQuery = `SELECT employee.id, role.id FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.department_id = ${deptId}`
+  connection.query(cQuery, function(err, res) {
+    if (err) throw err;
+    console.log(res.length);
+    openProcess();
+  })
 }
 
 
