@@ -486,7 +486,7 @@ async function deleteRole() {
               case "No":
                 openProcess();
                 break;
-              // If confirmed, deletes role and relevant employee(s)
+              // If confirmed, deletes role and associated employee(s) on cascade
               default:
                 connection.query("DELETE FROM role WHERE ?",
                   {
@@ -507,7 +507,6 @@ async function deleteRole() {
 }
 
 // Delete department
-// On delete, cascade for roles
 async function deleteDepartment() {
   const deptQuery = "SELECT name, id FROM department"
   const deptNames = await getNames(deptQuery, "department");
@@ -533,34 +532,19 @@ async function deleteDepartment() {
             case "No":
               openProcess();
               break;
-            // If confirmed, deletes department and associated role(s)
+            // If confirmed, deletes department and associated role(s) on cascade
             default:
-              // Checks whether there are roles in the department
-              connection.query(`SELECT id FROM role WHERE role.department_id = ${deptId}`,
+              connection.query("DELETE FROM department WHERE ?",
+                {
+                  id: deptId
+                },
                 function (err, res) {
                   if (err) throw err;
-                  switch (res.length) {
-                    // If no roles, deletes department
-                    case 0:
-                      connection.query(`DELETE FROM department WHERE id = ${deptId}`,
-                        function (err, res) {
-                          if (err) throw err;
-                          console.log("Department and associated roles deleted!\n")
-                          openProcess();
-                        })
-                      break;
-                    // If yes roles, deletes department and roles
-                    default:
-                      connection.query(`DELETE department, role FROM department INNER JOIN role ON department.id = role.department_id WHERE department.id = ${deptId}`,
-                        function (err, res) {
-                          if (err) throw err;
-                          console.log("Department and associated roles deleted!\n")
-                          openProcess();
-                        })
-                        .catch(function (err) {
-                          if (err) throw err;
-                        })
-                  }
+                  console.log("Department and associated role(s) deleted!\n")
+                  openProcess();
+                })
+                .catch(function (err) {
+                  if (err) throw err;
                 })
           }
         })
@@ -579,9 +563,20 @@ async function deleteDepartment() {
             case "No":
               openProcess();
               break;
-            // TODO: If confirmed, deletes department and associated role(s) and employee(s)
+            // If confirmed, deletes department and associated role(s) and employee(s) on cascade
             default:
-              openProcess();
+              connection.query("DELETE FROM department WHERE ?",
+                {
+                  id: deptId
+                },
+                function (err, res) {
+                  if (err) throw err;
+                  console.log("Department and associated role(s) & employee(s) deleted!\n")
+                  openProcess();
+                })
+                .catch(function (err) {
+                  if (err) throw err;
+                })
           }
         })
     }
