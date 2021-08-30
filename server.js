@@ -94,14 +94,26 @@ function getId(questionObj, table) {
           resolver = { title: response.jobTitle };
           break;
         default:
-          const mName = response.managerName.split(" ");
-          const fName = mName[0];
-          const lName = mName[1];
-          resolver = [{ first_name: fName }, { last_name: lName }]
+          switch (response.managerName) {
+            case "None":
+              resolver = null;
+              break;
+            default:
+              const mName = response.managerName.split(" ");
+              const fName = mName[0];
+              const lName = mName[1];
+              resolver = [{ first_name: fName }, { last_name: lName }]
+          }
       }
-      connection.query(queryStr, resolver, function (err, data) {
-        resolve(data[0].id)
-      })
+      switch (resolver) {
+        case null:
+          resolve(null);
+          break;
+        default:
+          connection.query(queryStr, resolver, function (err, data) {
+            resolve(data[0].id);
+          })
+      }
     });
   });
 };
@@ -134,6 +146,7 @@ function getRoleNameQuestion(roleNames) {
 
 // Employee questions
 function getEmployeeQuestions(managerNames, roleNames) {
+  const managerChoices = managerNames.concat("None");
   return [
     {
       type: "list",
@@ -145,7 +158,7 @@ function getEmployeeQuestions(managerNames, roleNames) {
       type: "list",
       message: "Who is the employee's manager?",
       name: "managerName",
-      choices: managerNames
+      choices: managerChoices
     },
   ];
 };
@@ -320,15 +333,18 @@ async function viewBy(table, col, connQuery, qFunction) {
 
 // View employees by manager
 async function viewByManager() {
+  let cQuery;
   const manQuery = "SELECT id, CONCAT(first_name,' ',last_name) AS manager_name FROM employee WHERE manager_id IS NULL";
   const managerNames = await getNames(manQuery, "manager");
   const employeeQuestions = await getEmployeeQuestions(managerNames);
   const managerId = await getId(employeeQuestions[1], "employee");
   console.log(`Selecting all employees by manager...\n`);
-  connection.query("SELECT employee.first_name, employee.last_name FROM employee WHERE ?",
-    {
-      manager_id: managerId
-    },
+  if (managerId === null) {
+    cQuery = "SELECT employee.first_name, employee.last_name FROM employee WHERE manager_id IS NULL";
+  } else {
+    cQuery = `SELECT employee.first_name, employee.last_name FROM employee WHERE manager_id = ${managerId}`
+  }
+  connection.query(cQuery,
     function (err, res) {
       if (err) throw err;
       console.table(res);
