@@ -118,20 +118,45 @@ function getId(questionObj, table) {
   });
 };
 
-// Deletes departments or roles given table, ID, and a string to log
+// Deletes employees, roles or departments given table, ID, and a string to log
 function deleteThis(table, thisId, logStr) {
-  connection.query(`DELETE FROM ${table} WHERE ?`,
-    {
-      id: thisId
-    },
-    function (err, res) {
-      if (err) throw err;
-      console.log(logStr)
-      openProcess();
-    })
-    .catch(function (err) {
-      if (err) throw err;
-    })
+  switch (table) {
+    case "employee":
+      const eName = thisId.split(" ");
+      const fName = eName[0];
+      const lName = eName[1];
+      connection.query(
+        `DELETE FROM ${table} WHERE ? AND ?`,
+        [
+          {
+            first_name: fName
+          },
+          {
+            last_name: lName
+          }
+        ],
+        function (err, res) {
+          if (err) throw err;
+          console.log("Employee deleted!\n");
+          openProcess();
+        }).catch(function (err) {
+          if (err) throw err;
+        });
+      break;
+    default:
+      connection.query(`DELETE FROM ${table} WHERE ?`,
+        {
+          id: thisId
+        },
+        function (err, res) {
+          if (err) throw err;
+          console.log(logStr)
+          openProcess();
+        })
+        .catch(function (err) {
+          if (err) throw err;
+        })
+  }
 }
 
 
@@ -454,24 +479,7 @@ async function deleteEmployee() {
   const employeeNames = await getNames(empQuery, "employee");
   const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
   inquirer.prompt(employeeQuestion).then(response => {
-    const eName = response.employeeChoice.split(" ");
-    const fName = eName[0];
-    const lName = eName[1];
-    connection.query(
-      "DELETE FROM employee WHERE ? AND ?",
-      [
-        {
-          first_name: fName
-        },
-        {
-          last_name: lName
-        }
-      ],
-      function (err, res) {
-        if (err) throw err;
-        console.log("Employee deleted!\n");
-        openProcess();
-      });
+    deleteThis("employee", response.employeeChoice, "Employee deleted!\n")
   }).catch(function (err) {
     if (err) throw err;
   });
