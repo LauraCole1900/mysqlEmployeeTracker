@@ -118,6 +118,22 @@ function getId(questionObj, table) {
   });
 };
 
+// Deletes departments or roles given table, ID, and a string to log
+function deleteThis(table, thisId, logStr) {
+  connection.query(`DELETE FROM ${table} WHERE ?`,
+    {
+      id: thisId
+    },
+    function (err, res) {
+      if (err) throw err;
+      console.log(logStr)
+      openProcess();
+    })
+    .catch(function (err) {
+      if (err) throw err;
+    })
+}
+
 
 // ==========================================================
 // Functions to populate choices array(s) and return relevant question object(s)
@@ -477,18 +493,7 @@ async function deleteRole() {
       switch (res.length) {
         // If no employees in role, deletes role
         case 0:
-          connection.query("DELETE FROM role WHERE ?",
-            {
-              id: roleId
-            },
-            function (err, res) {
-              if (err) throw err;
-              console.log("Role deleted!\n")
-              openProcess();
-            })
-            .catch(function (err) {
-              if (err) throw err;
-            })
+          deleteThis("role", roleId, "Role deleted!\n")
           break;
         default:
           // If employees in role, confirms whether user wants to continue
@@ -504,18 +509,7 @@ async function deleteRole() {
                 break;
               // If confirmed, deletes role and associated employee(s) on cascade
               default:
-                connection.query("DELETE FROM role WHERE ?",
-                  {
-                    id: roleId
-                  },
-                  function (err, res) {
-                    if (err) throw err;
-                    console.log("Role and employee(s) deleted!\n")
-                    openProcess();
-                  })
-                  .catch(function (err) {
-                    if (err) throw err;
-                  })
+                deleteThis("role", roleId, "Role and associated employees deleted!\n")
             }
           })
       }
@@ -543,25 +537,13 @@ async function deleteDepartment() {
           name: "deptRoleConfirm",
           choices: ["Yes", "No"]
         }).then(function (res) {
-          console.log(res);
           switch (res.deptRoleConfirm) {
             case "No":
               openProcess();
               break;
             // If confirmed, deletes department and associated role(s) on cascade
             default:
-              connection.query("DELETE FROM department WHERE ?",
-                {
-                  id: deptId
-                },
-                function (err, res) {
-                  if (err) throw err;
-                  console.log("Department and associated role(s) deleted!\n")
-                  openProcess();
-                })
-                .catch(function (err) {
-                  if (err) throw err;
-                })
+              deleteThis("department", deptId, "Department and associated roles deleted!\n")
           }
         })
         break;
@@ -574,25 +556,13 @@ async function deleteDepartment() {
           name: "deptEmployeeConfirm",
           choices: ["Yes", "No"]
         }).then(function (res) {
-          console.log(res);
           switch (res.deptEmployeeConfirm) {
             case "No":
               openProcess();
               break;
             // If confirmed, deletes department and associated role(s) and employee(s) on cascade
             default:
-              connection.query("DELETE FROM department WHERE ?",
-                {
-                  id: deptId
-                },
-                function (err, res) {
-                  if (err) throw err;
-                  console.log("Department and associated role(s) & employee(s) deleted!\n")
-                  openProcess();
-                })
-                .catch(function (err) {
-                  if (err) throw err;
-                })
+              deleteThis("department", deptId, "Department and associated role(s) & employee(s) deleted!\n")
           }
         })
     }
