@@ -76,7 +76,7 @@ function getNames(queryStr, nameType) {
         return objArr;
       });
       resolve(names);
-    })
+    });
   });
 };
 
@@ -102,9 +102,9 @@ function getId(questionObj, table) {
               const mName = response.managerName.split(" ");
               const fName = mName[0];
               const lName = mName[1];
-              resolver = [{ first_name: fName }, { last_name: lName }]
-          }
-      }
+              resolver = [{ first_name: fName }, { last_name: lName }];
+          };
+      };
       switch (resolver) {
         case null:
           resolve(null);
@@ -112,8 +112,8 @@ function getId(questionObj, table) {
         default:
           connection.query(queryStr, resolver, function (err, data) {
             resolve(data[0].id);
-          })
-      }
+          });
+      };
     });
   });
 };
@@ -137,7 +137,7 @@ function deleteThis(table, thisId, logStr) {
         ],
         function (err, res) {
           if (err) throw err;
-          console.log("Employee deleted!\n");
+          console.log(logStr);
           openProcess();
         }).catch(function (err) {
           if (err) throw err;
@@ -150,14 +150,13 @@ function deleteThis(table, thisId, logStr) {
         },
         function (err, res) {
           if (err) throw err;
-          console.log(logStr)
+          console.log(logStr);
           openProcess();
-        })
-        .catch(function (err) {
+        }).catch(function (err) {
           if (err) throw err;
-        })
-  }
-}
+        });
+  };
+};
 
 
 // ==========================================================
@@ -172,7 +171,7 @@ function getRoleDeptQuestion(deptNames) {
       name: "chosenDept",
       choices: deptNames
     }
-  ]
+  ];
 };
 
 function getRoleNameQuestion(roleNames) {
@@ -221,8 +220,9 @@ function getDepartmentQuestion(deptNames) {
     message: "Which department?",
     name: "chosenDept",
     choices: deptNames
-  };
+  }
 };
+
 
 // ==========================================================
 // CRUD functionality
@@ -246,11 +246,10 @@ async function addDepartment() {
         if (err) throw err;
         console.log("Department added!\n");
         openProcess();
-      }
-    );
+      });
   }).catch(function (err) {
     if (err) throw err;
-  })
+  });
 };
 
 async function addEmployee() {
@@ -261,18 +260,20 @@ async function addEmployee() {
   const employeeQuestions = await getEmployeeQuestions(managerNames, roleNames);
   const roleId = await getId(employeeQuestions[0], "role");
   const managerId = await getId(employeeQuestions[1], "employee");
-  inquirer.prompt([
-    {
-      type: "input",
-      message: "What is the employee's first name?",
-      name: "firstName"
-    },
-    {
-      type: "input",
-      message: "What is the employee's last name?",
-      name: "lastName"
-    },
-  ]).then(response => {
+  inquirer.prompt(
+    [
+      {
+        type: "input",
+        message: "What is the employee's first name?",
+        name: "firstName"
+      },
+      {
+        type: "input",
+        message: "What is the employee's last name?",
+        name: "lastName"
+      },
+    ]
+  ).then(response => {
     console.log("Adding employee...\n");
     connection.query(
       "INSERT INTO employee SET ?",
@@ -289,7 +290,7 @@ async function addEmployee() {
       });
   }).catch(function (err) {
     if (err) throw err;
-  })
+  });
 };
 
 async function addRole() {
@@ -309,23 +310,24 @@ async function addRole() {
         message: "What is this role's salary?",
         name: "roleSalary"
       },
-    ]).then(response => {
-      console.log("Creating a new role...\n");
-      connection.query(
-        "INSERT INTO role SET ?",
-        {
-          title: response.roleTitle,
-          salary: response.roleSalary,
-          department_id: deptId
-        },
-        function (err, res) {
-          if (err) throw err;
-          console.log("Role added!\n");
-          openProcess();
-        });
-    }).catch(function (err) {
-      if (err) throw err;
-    })
+    ]
+  ).then(response => {
+    console.log("Creating a new role...\n");
+    connection.query(
+      "INSERT INTO role SET ?",
+      {
+        title: response.roleTitle,
+        salary: response.roleSalary,
+        department_id: deptId
+      },
+      function (err, res) {
+        if (err) throw err;
+        console.log("Role added!\n");
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  });
 };
 
 
@@ -339,7 +341,7 @@ function viewAll(table, col) {
       if (err) throw err;
       console.table(res);
       openProcess();
-    })
+    });
 };
 
 // Views employees by department or role given table and column names, connection query,
@@ -359,17 +361,17 @@ async function viewBy(table, col, connQuery, qFunction) {
         break;
       default:
         return null;
-    }
+    };
     console.log(`Selecting all employees by ${table}...\n`);
     connection.query(connQuery, resObj,
       function (err, res) {
         if (err) throw err;
         console.table(res);
         openProcess();
-      })
+      });
   }).catch(function (err) {
     if (err) throw err;
-  })
+  });
 };
 
 // View employees by manager
@@ -384,16 +386,15 @@ async function viewByManager() {
     cQuery = "SELECT employee.first_name, employee.last_name FROM employee WHERE manager_id IS NULL";
   } else {
     cQuery = `SELECT employee.first_name, employee.last_name FROM employee WHERE manager_id = ${managerId}`
-  }
+  };
   connection.query(cQuery,
     function (err, res) {
       if (err) throw err;
       console.table(res);
       openProcess();
-    })
-    .catch(function (err) {
+    }).catch(function (err) {
       if (err) throw err;
-    })
+    });
 };
 
 // View department budgets
@@ -404,10 +405,9 @@ async function viewDeptBudget() {
       if (err) throw err;
       console.table(res);
       openProcess();
-    })
-    .catch(function (err) {
+    }).catch(function (err) {
       if (err) throw err;
-    })
+    });
 };
 
 
@@ -428,14 +428,14 @@ async function updateJobData(dataQuery, table, cond, qFunction) {
       break;
     default:
       dataId = await getId(dataQuestion, table);
-  }
+  };
   switch (cond) {
     case "role":
       resObj = { role_id: dataId };
       break;
     default:
-      resObj = { manager_id: dataId }
-  }
+      resObj = { manager_id: dataId };
+  };
   inquirer.prompt(
     [
       {
@@ -444,30 +444,31 @@ async function updateJobData(dataQuery, table, cond, qFunction) {
         name: "employeeChoice",
         choices: employeeNames
       },
-    ]).then(response => {
-      console.log(`Updating ${cond}...\n`);
-      const eName = response.employeeChoice.split(" ");
-      const fName = eName[0];
-      const lName = eName[1];
-      connection.query(
-        "UPDATE employee SET ? WHERE ? AND ?",
-        [
-          resObj,
-          {
-            first_name: fName
-          },
-          {
-            last_name: lName
-          }
-        ],
-        function (err, res) {
-          if (err) throw err;
-          console.log(`${res.affectedRows} employee's ${cond} updated!\n`);
-          openProcess();
-        })
-    }).catch(function (err) {
-      if (err) throw err;
-    })
+    ]
+  ).then(response => {
+    console.log(`Updating ${cond}...\n`);
+    const eName = response.employeeChoice.split(" ");
+    const fName = eName[0];
+    const lName = eName[1];
+    connection.query(
+      "UPDATE employee SET ? WHERE ? AND ?",
+      [
+        resObj,
+        {
+          first_name: fName
+        },
+        {
+          last_name: lName
+        }
+      ],
+      function (err, res) {
+        if (err) throw err;
+        console.log(`${res.affectedRows} employee's ${cond} updated!\n`);
+        openProcess();
+      });
+  }).catch(function (err) {
+    if (err) throw err;
+  });
 };
 
 
@@ -479,7 +480,7 @@ async function deleteEmployee() {
   const employeeNames = await getNames(empQuery, "employee");
   const employeeQuestion = await getEmployeeNameQuestion(employeeNames);
   inquirer.prompt(employeeQuestion).then(response => {
-    deleteThis("employee", response.employeeChoice, "Employee deleted!\n")
+    deleteThis("employee", response.employeeChoice, "Employee deleted!\n");
   }).catch(function (err) {
     if (err) throw err;
   });
@@ -501,81 +502,93 @@ async function deleteRole() {
       switch (res.length) {
         // If no employees in role, deletes role
         case 0:
-          deleteThis("role", roleId, "Role deleted!\n")
+          deleteThis("role", roleId, "Role deleted!\n");
           break;
         default:
           // If employees in role, confirms whether user wants to continue
-          inquirer.prompt({
-            type: "list",
-            message: `${res.length} employee(s) currently hold this role. If you delete this role, those employees will also be deleted. Continue?`,
-            name: "roleConfirm",
-            choices: ["Yes", "No"]
-          }).then(function (res) {
+          inquirer.prompt(
+            {
+              type: "list",
+              message: `${res.length} employee(s) currently hold this role. If you delete this role, those employees will also be deleted. Continue?`,
+              name: "roleConfirm",
+              choices: ["Yes", "No"]
+            }
+          ).then(function (res) {
             switch (res.roleConfirm) {
               case "No":
                 openProcess();
                 break;
               // If confirmed, deletes role and associated employee(s) on cascade
               default:
-                deleteThis("role", roleId, "Role and associated employees deleted!\n")
-            }
-          })
-      }
-    })
-}
+                deleteThis("role", roleId, "Role and associated employees deleted!\n");
+            };
+          }).catch(function (err) {
+            if (err) throw err;
+          });
+      };
+    });
+};
 
 // Delete department
 async function deleteDepartment() {
-  const deptQuery = "SELECT name, id FROM department"
+  const deptQuery = "SELECT name, id FROM department";
   const deptNames = await getNames(deptQuery, "department");
   const deptQuestion = getDepartmentQuestion(deptNames);
-  const deptId = await getId(deptQuestion, "department")
+  const deptId = await getId(deptQuestion, "department");
   console.log(deptId);
   // Checks whether there are any employees in that department
-  cQuery = `SELECT employee.id, role.id FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.department_id = ${deptId}`
+  cQuery = `SELECT employee.id, role.id FROM employee INNER JOIN role ON employee.role_id = role.id WHERE role.department_id = ${deptId}`;
   connection.query(cQuery, function (err, res) {
     if (err) throw err;
     console.log(res.length);
     switch (res.length) {
       // If not, confirms that user wants to delete department and associated role(s)
       case 0:
-        inquirer.prompt({
-          type: "list",
-          message: "This action will also delete all roles in this department. Continue?",
-          name: "deptRoleConfirm",
-          choices: ["Yes", "No"]
-        }).then(function (res) {
+        inquirer.prompt(
+          {
+            type: "list",
+            message: "This action will also delete all roles in this department. Continue?",
+            name: "deptRoleConfirm",
+            choices: ["Yes", "No"]
+          }
+        ).then(function (res) {
           switch (res.deptRoleConfirm) {
             case "No":
               openProcess();
               break;
             // If confirmed, deletes department and associated role(s) on cascade
             default:
-              deleteThis("department", deptId, "Department and associated roles deleted!\n")
-          }
-        })
+              deleteThis("department", deptId, "Department and associated roles deleted!\n");
+          };
+        }).catch(function (err) {
+          if (err) throw err;
+        });
         break;
       // If there are employees in the department, confirms that user wants to delete department
       // and associated role(s) and employee(s)
       default:
-        inquirer.prompt({
-          type: "list",
-          message: `This action will also delete the ${res.length} employee(s) and any associated roles in this department. Continue?`,
-          name: "deptEmployeeConfirm",
-          choices: ["Yes", "No"]
-        }).then(function (res) {
+        inquirer.prompt(
+          {
+            type: "list",
+            message: `This action will also delete the ${res.length} employee(s) and any associated roles in this department. Continue?`,
+            name: "deptEmployeeConfirm",
+            choices: ["Yes", "No"]
+          }
+        ).then(function (res) {
           switch (res.deptEmployeeConfirm) {
             case "No":
               openProcess();
               break;
             // If confirmed, deletes department and associated role(s) and employee(s) on cascade
             default:
-              deleteThis("department", deptId, "Department and associated role(s) & employee(s) deleted!\n")
-          }
-        })
-    }
-  })
-}
+              deleteThis("department", deptId, "Department and associated role(s) & employee(s) deleted!\n");
+          };
+        }).catch(function (err) {
+          if (err) throw err;
+        });
+    };
+  });
+};
 
 
 // BEGIN
