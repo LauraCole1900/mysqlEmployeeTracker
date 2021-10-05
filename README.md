@@ -62,7 +62,7 @@ This application is intended to be used to track employees, departments, and rol
 
 ## Technologies Used
 
-Node.js, Inquirer, Express, MySQL, console.table npm package
+[![Node.js](https://img.shields.io/badge/built%20with-Node.js-3c873a)](https://nodejs.org/en/) [![Inquirer.js](https://img.shields.io/badge/built%20with-Inquirer.js-68a063)](https://www.npmjs.com/package/inquirer) [![Express.js](https://img.shields.io/badge/built%20with-Express.js-303030)](https://expressjs.com/) [![MySQL](https://img.shields.io/badge/built%20with-MySQL-00758f)](https://www.mysql.com/) [![console.table](https://img.shields.io/badge/built%20with-console.table-cb3837)](https://www.npmjs.com/package/console.table)
 
 ## Tests
 
