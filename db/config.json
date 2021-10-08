@@ -2,6 +2,6 @@
   "host": "localhost",
   "port": 3306,
   "user": "root",
-  "password": "B00tc@mp2020",
+  "password": "",
   "database": "datacorp_db"
 }
