@@ -1,7 +1,7 @@
 {
-  "name": "homework10",
+  "name": "mysql-employee-management-system",
   "version": "1.0.0",
-  "description": "## Table of Contents",
+  "description": "CLI employee management system using MySQL and Inquirer.js",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
