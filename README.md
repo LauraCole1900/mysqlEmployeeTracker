@@ -20,6 +20,7 @@ This is a CLI employee management system application using Inquirer.js and MySQL
 ## Links
 
 [Link to walkthrough video](assets/Employee-Management-System-walkthrough.webm)
+
 [Alternate link to walkthrough video](https://drive.google.com/file/d/1EK5HcKPhBGIX6FEMtZK95S0B9AVxnhrV/view)
 
 ## Installation Instructions
